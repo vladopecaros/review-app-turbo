@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'Running bash tool — check CLAUDE.md conventions'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd apps/api && npm run typecheck 2>&1 | tail -20 && npm run lint 2>&1 | tail -20"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "echo 'Session ending — remember to update CLAUDE.md Gotchas if you learned anything'"
+      }
+    ]
+  }
+}
