@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';
@@ -68,6 +68,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [createForm, setCreateForm] = useState<ProductFormState>(defaultFormState);
+  const loadRequestIdRef = useRef(0);
   const [editForm, setEditForm] = useState<ProductFormState>(defaultFormState);
 
   const editingProduct = useMemo(
@@ -76,22 +77,41 @@ export function ProductSection({ orgId }: { orgId: string }) {
   );
 
   async function loadProducts() {
+    const requestId = loadRequestIdRef.current + 1;
+    loadRequestIdRef.current = requestId;
+
     setIsRefreshing(true);
     setError(null);
 
     try {
       const response = await api.get(`/organization/${orgId}/products`);
       const payload = (response.data?.products ?? []) as Product[];
+
+      if (loadRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setProducts(payload);
     } catch (err) {
+      if (loadRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setError(parseError(err, t('common.error')));
     } finally {
+      if (loadRequestIdRef.current !== requestId) {
+        return;
+      }
+
       setIsLoading(false);
       setIsRefreshing(false);
     }
   }
 
   useEffect(() => {
+    setIsLoading(true);
+    setProducts([]);
+    setEditingProductId(null);
     void loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);

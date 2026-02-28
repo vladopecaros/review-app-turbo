@@ -171,13 +171,21 @@ export class ProductController {
     const normalizedProducts: BulkProductInput[] = [];
 
     for (let i = 0; i < products.length; i += 1) {
-      const entry = products[i] as Record<string, unknown>;
-      const externalProductId = entry.externalProductId;
-      const name = entry.name;
-      const slug = entry.slug;
-      const description = entry.description;
-      const active = entry.active;
-      const metadata = entry.metadata;
+      const entry = products[i];
+
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      const payload = entry as Record<string, unknown>;
+      const externalProductId = payload.externalProductId;
+      const name = payload.name;
+      const slug = payload.slug;
+      const description = payload.description;
+      const active = payload.active;
+      const metadata = payload.metadata;
 
       if (
         typeof externalProductId !== 'string' ||
