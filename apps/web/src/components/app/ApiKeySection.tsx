@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { isAxiosError } from 'axios';
 
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
@@ -30,7 +31,11 @@ export function ApiKeySection({ orgId }: { orgId: string }) {
       setGeneratedKey(key);
       setIsConfirmOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'));
+      if (isAxiosError(err) && err.response?.status === 403) {
+        setError(t('app.orgDetail.apiKey.forbiddenError'));
+      } else {
+        setError(err instanceof Error ? err.message : t('common.error'));
+      }
     } finally {
       setIsGenerating(false);
     }

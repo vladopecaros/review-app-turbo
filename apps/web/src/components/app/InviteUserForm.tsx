@@ -42,6 +42,8 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
     } catch (err) {
       if (isAxiosError(err) && err.response?.status === 404) {
         setError(t('app.orgDetail.invite.userNotFoundError'));
+      } else if (isAxiosError(err) && err.response?.status === 403) {
+        setError(t('app.orgDetail.invite.forbiddenError'));
       } else {
         setError(err instanceof Error ? err.message : t('common.error'));
       }
