@@ -175,7 +175,7 @@
       },
       "invite": {
         "title": "Invite a member",
-        "userIdLabel": "User ID",
+        "userEmailLabel": "User email",
         "roleLabel": "Role",
         "roleAdmin": "Admin",
         "roleMember": "Member",

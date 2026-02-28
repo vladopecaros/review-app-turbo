@@ -96,6 +96,18 @@ async function inviteUser(
     .send({ invitedUserId, invitedUserRole });
 }
 
+async function inviteUserByEmail(
+  accessToken: string,
+  organizationId: string,
+  invitedUserEmail: string,
+  invitedUserRole: 'admin' | 'member' | 'owner' | string,
+) {
+  return request
+    .post(`/organization/${organizationId}/invite-user`)
+    .set('Authorization', `Bearer ${accessToken}`)
+    .send({ invitedUserEmail, invitedUserRole });
+}
+
 async function acceptInvitation(accessToken: string, invitationId: string) {
   return request
     .put(`/organization-memberships/invitations/${invitationId}/accept`)
@@ -388,6 +400,34 @@ test('organization invite rejects unsupported role values', async () => {
     inviteRes.body.message,
     'Invited user role must be admin or member',
   );
+});
+
+test('organization invite accepts invited user email', async () => {
+  const ownerEmail = 'owner-email-invite@example.com';
+  const inviteeEmail = 'invitee-by-email@example.com';
+
+  const ownerToken = await registerAndExtractToken(ownerEmail);
+  await verifyEmail(ownerToken.token);
+  const ownerLogin = await loginUser(ownerEmail);
+  const ownerAccessToken = ownerLogin.body.accessToken as string;
+
+  const orgRes = await createOrganization(ownerAccessToken, 'org-email-invite');
+  assert.equal(orgRes.status, 200);
+  const organizationId = orgRes.body.organization?._id?.toString();
+  assert.ok(organizationId);
+
+  const inviteeToken = await registerAndExtractToken(inviteeEmail);
+  await verifyEmail(inviteeToken.token);
+
+  const inviteRes = await inviteUserByEmail(
+    ownerAccessToken,
+    organizationId!,
+    inviteeEmail,
+    'member',
+  );
+
+  assert.equal(inviteRes.status, 200);
+  assert.ok(inviteRes.body.invitation?._id);
 });
 
 test('organization member cannot create or update products', async () => {

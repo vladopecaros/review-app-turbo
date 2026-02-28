@@ -100,7 +100,7 @@ export class OrganizationController {
 
   async inviteUser(req: Request, res: Response) {
     const { user } = req;
-    const { invitedUserId, invitedUserRole } = req.body;
+    const { invitedUserId, invitedUserEmail, invitedUserRole } = req.body;
     const { id: organizationId } = req.params;
 
     if (!user?.id) {
@@ -109,7 +109,11 @@ export class OrganizationController {
       });
     }
 
-    if (!invitedUserId || !invitedUserRole || !organizationId) {
+    if (
+      (!invitedUserId && !invitedUserEmail) ||
+      !invitedUserRole ||
+      !organizationId
+    ) {
       throw new AppError('Missing required fields', 400);
     }
 
@@ -120,13 +124,23 @@ export class OrganizationController {
     if (!Types.ObjectId.isValid(organizationId.toString())) {
       throw new AppError('Organization ID is not in correct format', 400);
     }
-    if (!Types.ObjectId.isValid(invitedUserId.toString())) {
+
+    if (
+      invitedUserEmail &&
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invitedUserEmail.toString().trim())
+    ) {
+      throw new AppError('Invited user email is not in correct format', 400);
+    }
+    if (invitedUserId && !Types.ObjectId.isValid(invitedUserId.toString())) {
       throw new AppError('Invited user ID is not in correct format', 400);
     }
 
     const returnedInvitation = await this.org.inviteUser(
       new Types.ObjectId(user.id),
-      new Types.ObjectId(invitedUserId),
+      invitedUserId ? new Types.ObjectId(invitedUserId) : null,
+      invitedUserEmail
+        ? invitedUserEmail.toString().trim().toLowerCase()
+        : null,
       new Types.ObjectId(organizationId.toString()),
       invitedUserRole as 'admin' | 'member',
     );

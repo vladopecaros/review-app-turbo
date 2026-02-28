@@ -133,7 +133,8 @@ export class OrganizationService {
 
   async inviteUser(
     currentUserId: Types.ObjectId,
-    invitedUserId: Types.ObjectId,
+    invitedUserId: Types.ObjectId | null,
+    invitedUserEmail: string | null,
     organizationId: Types.ObjectId,
     invitedUserRole: 'admin' | 'member',
   ) {
@@ -146,7 +147,13 @@ export class OrganizationService {
       throw new AppError('Permission denied', 403);
     }
 
-    const userDetails = await this.userService.getUserById(invitedUserId);
+    let userDetails = null;
+
+    if (invitedUserEmail) {
+      userDetails = await this.userService.getUserByEmail(invitedUserEmail);
+    } else if (invitedUserId) {
+      userDetails = await this.userService.getUserById(invitedUserId);
+    }
 
     if (!userDetails) {
       throw new AppError('User not found', 404);
@@ -163,7 +170,7 @@ export class OrganizationService {
 
     const created = await this.organizationMemberships.create({
       organizationId,
-      userId: invitedUserId,
+      userId: userDetails._id,
       role: invitedUserRole ?? 'member',
       status: 'invited',
     });

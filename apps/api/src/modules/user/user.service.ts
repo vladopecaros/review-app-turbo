@@ -7,4 +7,8 @@ export class UserService {
   async getUserById(id: Types.ObjectId) {
     return this.users.findById(id);
   }
+
+  async getUserByEmail(email: string) {
+    return this.users.findByEmail(email);
+  }
 }

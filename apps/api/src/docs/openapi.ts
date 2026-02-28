@@ -110,6 +110,25 @@ export const openApiSpec = {
     '/organization/{id}/invite-user': {
       post: {
         summary: 'Invite user to organization',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['invitedUserRole'],
+                properties: {
+                  invitedUserId: { type: 'string' },
+                  invitedUserEmail: { type: 'string', format: 'email' },
+                  invitedUserRole: {
+                    type: 'string',
+                    enum: ['admin', 'member'],
+                  },
+                },
+              },
+            },
+          },
+        },
         parameters: [
           {
             in: 'path',
