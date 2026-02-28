@@ -19,6 +19,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, clearAuth } = useAuthStore();
   const { isAuthenticated, isLoading } = useAuthGuard();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const orgMatch = pathname.match(/^\/app\/orgs\/([^/]+)/);
+  const orgId = orgMatch?.[1];
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -40,6 +42,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: '/app', label: t('appShell.dashboard') },
+    ...(orgId
+      ? [
+          {
+            href: `/app/orgs/${orgId}`,
+            label: t('appShell.organization'),
+          },
+          {
+            href: `/app/orgs/${orgId}/products`,
+            label: t('appShell.products'),
+          },
+        ]
+      : []),
     { href: '/security', label: t('nav.security') },
   ];
 
@@ -96,7 +110,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <nav className="fixed inset-x-4 bottom-4 z-30 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-[rgba(12,16,22,0.92)] p-2 backdrop-blur md:hidden">
+      <nav
+        className="fixed inset-x-4 bottom-4 z-30 grid gap-2 rounded-xl border border-white/10 bg-[rgba(12,16,22,0.92)] p-2 backdrop-blur md:hidden"
+        style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+      >
         {navItems.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
           return (

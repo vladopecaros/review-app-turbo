@@ -142,7 +142,9 @@
     "dashboard": "Organizations",
     "logout": "Log out",
     "loggingOut": "Logging out...",
-    "welcome": "Workspace"
+    "welcome": "Workspace",
+    "organization": "Organization",
+    "products": "Products"
   },
   "app": {
     "orgs": {
@@ -187,6 +189,36 @@
         "copied": "Copied!",
         "userNotFoundError": "This user doesn't have a Reviewlico account yet. Ask them to sign up first, then send the invite again.",
         "forbiddenError": "Only organization owners or admins can invite members to this organization."
+      },
+      "products": {
+        "title": "Products",
+        "description": "Create and manage products tied to this organization.",
+        "refresh": "Refresh",
+        "loading": "Loading products...",
+        "empty": "No products yet. Create one to start collecting product-level reviews.",
+        "createTitle": "Create product",
+        "externalProductIdLabel": "External product ID",
+        "descriptionLabel": "Description",
+        "activeLabel": "Active",
+        "create": "Create product",
+        "creating": "Creating...",
+        "createSuccess": "Product created successfully.",
+        "createError": "Unable to create product right now.",
+        "edit": "Edit",
+        "save": "Save changes",
+        "saving": "Saving...",
+        "updateSuccess": "Product updated successfully.",
+        "updateError": "Unable to update product right now.",
+        "delete": "Delete",
+        "deleting": "Deleting...",
+        "deleteConfirm": "Delete {name}? This cannot be undone.",
+        "deleteSuccess": "Product deleted successfully.",
+        "deleteError": "Unable to delete product right now.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "openPage": "Manage products on dedicated page",
+        "pageHint": "Products are managed on this dedicated page to keep organization settings focused.",
+        "backToOrganization": "Back to organization"
       }
     },
     "invitation": {
