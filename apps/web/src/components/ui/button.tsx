@@ -15,7 +15,7 @@ export function buttonVariants({
   className?: string;
 }) {
   const base =
-    'inline-flex items-center justify-center gap-2 rounded-lg border text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
+    'min-h-fit inline-flex items-center justify-center gap-2 rounded-lg border text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500';
 
   const variants: Record<ButtonVariant, string> = {
     default: 'border-blue-500 bg-blue-500 text-white hover:bg-blue-600 hover:border-blue-600',

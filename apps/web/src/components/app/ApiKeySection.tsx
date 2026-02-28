@@ -79,8 +79,8 @@ export function ApiKeySection({ orgId }: { orgId: string }) {
           <p className="text-xs uppercase tracking-[0.18em] text-[color:var(--text-muted)]">
             {t('app.orgDetail.apiKey.generatedState')}
           </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <code className="block min-w-0 flex-1 overflow-x-auto rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm font-mono text-blue-100">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start">
+            <code className="block min-w-0 flex-1 overflow-x-auto rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm font-mono text-blue-100 break-all sm:break-normal">
               {generatedKey}
             </code>
             <Button type="button" variant="outline" onClick={copyKey}>

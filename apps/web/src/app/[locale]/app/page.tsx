@@ -14,7 +14,7 @@ export default function AppDashboardPage() {
   const { orgs, isLoading, error, refresh, createOrg } = useOrgs();
 
   return (
-    <div className="space-y-4 pb-20 md:pb-0">
+    <div className="space-y-4">
       <Card>
         <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>

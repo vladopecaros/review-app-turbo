@@ -216,7 +216,7 @@
         "deleteError": "Unable to delete product right now.",
         "active": "Active",
         "inactive": "Inactive",
-        "openPage": "Manage products on dedicated page",
+        "openPage": "Manage products",
         "pageHint": "Products are managed on this dedicated page to keep organization settings focused.",
         "backToOrganization": "Back to organization"
       }

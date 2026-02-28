@@ -81,7 +81,7 @@ export default function OrganizationProductsPage() {
 
   if (state === 'loading') {
     return (
-      <div className="space-y-4 pb-20 md:pb-0">
+      <div className="space-y-4">
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-80 rounded-xl" />
       </div>
@@ -90,7 +90,7 @@ export default function OrganizationProductsPage() {
 
   if (state === 'invited' && invitationId) {
     return (
-      <div className="pb-20 md:pb-0">
+      <div>
         <Card className="mb-5 pb-2">
           <CardHeader>
             <CardTitle>{t('app.orgDetail.products.title')}</CardTitle>
@@ -121,7 +121,7 @@ export default function OrganizationProductsPage() {
   }
 
   return (
-    <div className="grid gap-4 pb-20 md:pb-0">
+    <div className="space-y-4">
       <Card>
         <CardHeader>
           <CardTitle className="font-display text-2xl tracking-tight">{org.name}</CardTitle>

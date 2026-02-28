@@ -10,15 +10,24 @@ import { Button } from '@/components/ui/button';
 export function MobileNavMenu() {
   const t = useTranslations();
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
+
+  function close() {
+    setClosing(true);
+    setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+    }, 200);
+  }
 
   return (
-    <div className="md:hidden">
+    <div className="relative md:hidden">
       <Button
         aria-expanded={open}
         aria-controls="mobile-nav-panel"
         variant="ghost"
         size="sm"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => (open ? close() : setOpen(true))}
         className="h-10 w-10 px-0"
       >
         <span className="sr-only">Menu</span>
@@ -30,15 +39,23 @@ export function MobileNavMenu() {
       </Button>
 
       {open ? (
-        <div
-          id="mobile-nav-panel"
-          className="absolute left-4 right-4 top-16 surface-panel grid gap-2 p-3 animate-fade-up"
-        >
-          <Link href="/security" className="rounded-md px-3 py-2 text-sm hover:bg-white/5" onClick={() => setOpen(false)}>
-            {t('nav.security')}
-          </Link>
-          <AuthNavActions mobile onAction={() => setOpen(false)} />
-        </div>
+        <>
+          <button
+            className="fixed inset-0 z-40"
+            onClick={close}
+            aria-hidden="true"
+            tabIndex={-1}
+          />
+          <div
+            id="mobile-nav-panel"
+            className={`absolute right-0 top-full z-50 mt-2 w-48 surface-panel grid gap-2 p-3 ${closing ? 'animate-fade-down' : 'animate-fade-up'}`}
+          >
+            <Link href="/security" className="rounded-md px-3 py-2 text-sm hover:bg-white/5" onClick={close}>
+              {t('nav.security')}
+            </Link>
+            <AuthNavActions mobile onAction={close} />
+          </div>
+        </>
       ) : null}
     </div>
   );

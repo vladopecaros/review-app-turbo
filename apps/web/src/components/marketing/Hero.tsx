@@ -35,24 +35,26 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="surface-panel code-fade animate-fade-up-delay-2 overflow-hidden p-0">
+        <div className="surface-panel animate-fade-up-delay-2 overflow-hidden p-0">
           <div className="flex items-center justify-between border-b border-[color:var(--border)] px-4 py-3 text-xs text-[color:var(--text-muted)]">
             <span>{t('hero.snippetTitle')}</span>
             <span className="font-mono">POST /reviews</span>
           </div>
-          <pre className="overflow-x-auto p-4 text-sm leading-6 font-mono text-[color:var(--text)]">
-            <code>
-              <span className="text-blue-300">curl</span> <span className="text-zinc-300">-X</span> <span className="text-emerald-300">POST</span> <span className="text-zinc-300">https://api.reviewlico.dev/reviews</span>{'\n'}
-              <span className="text-zinc-400">  -H</span>{' '}
-              <span className="text-amber-200">{`'Authorization: Bearer <API_KEY>'`}</span>
-              {'\n'}
-              <span className="text-zinc-400">  -H</span>{' '}
-              <span className="text-amber-200">{`'Content-Type: application/json'`}</span>
-              {'\n'}
-              <span className="text-zinc-400">  -d</span>{' '}
-              <span className="text-zinc-100">{`'{"rating":5,"review":"Fast setup."}'`}</span>
-            </code>
-          </pre>
+          <div className="code-fade">
+            <pre className="overflow-x-auto p-4 text-sm leading-6 font-mono text-[color:var(--text)]">
+              <code>
+                <span className="text-blue-300">curl</span> <span className="text-zinc-300">-X</span> <span className="text-emerald-300">POST</span> <span className="text-zinc-300">https://api.reviewlico.dev/reviews</span>{'\n'}
+                <span className="text-zinc-400">  -H</span>{' '}
+                <span className="text-amber-200">{`'Authorization: Bearer <API_KEY>'`}</span>
+                {'\n'}
+                <span className="text-zinc-400">  -H</span>{' '}
+                <span className="text-amber-200">{`'Content-Type: application/json'`}</span>
+                {'\n'}
+                <span className="text-zinc-400">  -d</span>{' '}
+                <span className="text-zinc-100">{`'{"rating":5,"review":"Fast setup."}'`}</span>
+              </code>
+            </pre>
+          </div>
         </div>
       </div>
     </section>

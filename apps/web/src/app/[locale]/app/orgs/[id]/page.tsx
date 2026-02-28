@@ -82,7 +82,7 @@ export default function OrgDetailPage() {
 
   if (state === 'loading') {
     return (
-      <div className="space-y-4 pb-20 md:pb-0">
+      <div className="space-y-4">
         <Skeleton className="h-36 rounded-xl" />
         <Skeleton className="h-52 rounded-xl" />
         <Skeleton className="h-56 rounded-xl" />
@@ -92,7 +92,7 @@ export default function OrgDetailPage() {
 
   if (state === 'invited' && invitationId) {
     return (
-      <div className="pb-20 md:pb-0">
+      <div>
         <Card className="mb-5 pb-2">
           <CardHeader>
             <CardTitle>{t('app.orgDetail.title')}</CardTitle>

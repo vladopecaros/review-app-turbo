@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -201,7 +202,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
+      <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle>{t('app.orgDetail.products.title')}</CardTitle>
         <Button variant="outline" size="sm" onClick={() => void loadProducts()} disabled={isRefreshing}>
           {isRefreshing ? t('common.loading') : t('app.orgDetail.products.refresh')}
@@ -265,7 +266,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
         ) : products.length === 0 ? (
           <p className="text-sm text-[color:var(--text-muted)]">{t('app.orgDetail.products.empty')}</p>
         ) : (
-          <div className="grid gap-3">
+          <div className="grid grid-cols-1 gap-3">
             {products.map((product) => {
               const isEditing = editingProduct?._id === product._id;
 
@@ -305,18 +306,19 @@ export function ProductSection({ orgId }: { orgId: string }) {
                     </div>
                   ) : (
                     <div className="space-y-2">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="font-medium">{product.name}</p>
-                          <p className="text-xs text-[color:var(--text-muted)]">{product.slug}</p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate font-medium">{product.name}</p>
+                          <p className="truncate text-xs text-[color:var(--text-muted)]">{product.slug}</p>
                         </div>
-                        <Badge className={product.active ? '' : 'border-zinc-500/40 bg-zinc-800/50 text-zinc-300'}>
+                        <Badge className={cn('shrink-0', product.active ? '' : 'border-zinc-500/40 bg-zinc-800/50 text-zinc-300')}>
                           {product.active ? t('app.orgDetail.products.active') : t('app.orgDetail.products.inactive')}
                         </Badge>
                       </div>
 
-                      <p className="text-xs text-[color:var(--text-muted)]">
-                        {t('app.orgDetail.products.externalProductIdLabel')}: {product.externalProductId}
+                      <p className="truncate text-xs text-[color:var(--text-muted)]">
+                        <span>{t('app.orgDetail.products.externalProductIdLabel')}:</span>{' '}
+                        <span className="font-mono">{product.externalProductId}</span>
                       </p>
 
                       {product.description ? <p className="text-sm text-[color:var(--text-muted)]">{product.description}</p> : null}
