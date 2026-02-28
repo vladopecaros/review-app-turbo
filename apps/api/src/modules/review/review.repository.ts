@@ -60,8 +60,10 @@ export class ReviewRepository {
     const populateFields = options?.includeProductName
       ? 'externalProductId name'
       : 'externalProductId';
-    const doc = await ReviewModel.findOne({ _id: reviewId, organizationId })
-      .populate('productId', populateFields);
+    const doc = await ReviewModel.findOne({
+      _id: reviewId,
+      organizationId,
+    }).populate('productId', populateFields);
     if (!doc) return null;
     return this.toDomain(doc);
   }
@@ -175,7 +177,9 @@ export class ReviewRepository {
     return typeof nameValue === 'string' ? nameValue : undefined;
   }
 
-  private getInternalProductId(doc: ReviewDocument): Types.ObjectId | undefined {
+  private getInternalProductId(
+    doc: ReviewDocument,
+  ): Types.ObjectId | undefined {
     const productValue = doc.productId as unknown;
     if (!productValue) {
       return undefined;
