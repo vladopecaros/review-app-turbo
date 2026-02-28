@@ -288,8 +288,10 @@ export const openApiSpec = {
           },
           {
             in: 'query',
-            name: 'productId',
+            name: 'externalProductId',
             required: false,
+            description:
+              'Your own product ID. Only valid when scope=product. Filters reviews to a specific product.',
             schema: { type: 'string' },
           },
           {
@@ -347,7 +349,38 @@ export const openApiSpec = {
           },
         ],
         responses: {
-          '200': { description: 'Review fetched successfully' },
+          '200': {
+            description: 'Review fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    review: {
+                      type: 'object',
+                      properties: {
+                        _id: { type: 'string' },
+                        externalProductId: { type: 'string' },
+                        productName: { type: 'string' },
+                        organizationId: { type: 'string' },
+                        rating: { type: 'integer' },
+                        text: { type: 'string' },
+                        reviewerName: { type: 'string' },
+                        reviewerEmail: { type: 'string' },
+                        status: {
+                          type: 'string',
+                          enum: ['published', 'pending', 'rejected'],
+                        },
+                        createdAt: { type: 'string' },
+                        updatedAt: { type: 'string' },
+                      },
+                    },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
           '400': { description: 'Invalid ID format' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },

@@ -18,7 +18,7 @@ export default function ProductReviewsPage() {
   const t = useTranslations();
   const params = useParams<{ id: string; productId: string }>();
   const orgId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
-  const productId = useMemo(
+  const externalProductId = useMemo(
     () => (Array.isArray(params.productId) ? params.productId[0] : params.productId),
     [params.productId],
   );
@@ -29,7 +29,7 @@ export default function ProductReviewsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!orgId || !productId) return;
+    if (!orgId || !externalProductId) return;
 
     let cancelled = false;
 
@@ -47,7 +47,9 @@ export default function ProductReviewsPage() {
 
         const orgPayload = (orgResponse.data?.organization ?? orgResponse.data) as Organization;
         const products = (productsResponse.data?.products ?? []) as Product[];
-        const found = products.find((p) => p._id === productId) ?? null;
+        const found =
+          products.find((p) => p.externalProductId === externalProductId) ??
+          null;
 
         setOrg(orgPayload);
         setProduct(found);
@@ -64,7 +66,7 @@ export default function ProductReviewsPage() {
     return () => {
       cancelled = true;
     };
-  }, [orgId, productId, t]);
+  }, [orgId, externalProductId, t]);
 
   if (state === 'loading') {
     return (
@@ -75,7 +77,7 @@ export default function ProductReviewsPage() {
     );
   }
 
-  if (!orgId || !productId || state === 'error' || !org) {
+  if (!orgId || !externalProductId || state === 'error' || !org) {
     return (
       <Card>
         <CardHeader>
@@ -109,7 +111,7 @@ export default function ProductReviewsPage() {
         </CardContent>
       </Card>
 
-      <ReviewSection orgId={org._id} productId={productId} />
+      <ReviewSection orgId={org._id} externalProductId={externalProductId} />
     </div>
   );
 }

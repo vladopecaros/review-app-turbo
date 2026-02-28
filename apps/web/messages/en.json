@@ -250,6 +250,7 @@
       "detailEmail": "Email",
       "detailProduct": "Product",
       "detailSubmitted": "Submitted",
+      "unknownDate": "Unknown date",
       "confirmApproveTitle": "Approve review?",
       "confirmApproveBody": "This review will be visible to the public.",
       "confirmRejectTitle": "Reject review?",

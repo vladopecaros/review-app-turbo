@@ -41,7 +41,8 @@ export interface Invitation {
 
 export interface Review {
   _id: string;
-  productId?: string;
+  externalProductId?: string;
+  productName?: string;
   organizationId: string;
   rating: number;
   text: string;

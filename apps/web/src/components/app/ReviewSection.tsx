@@ -29,8 +29,20 @@ function parseError(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function formatRelative(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
+function formatRelative(
+  dateStr: string | null | undefined,
+  fallback: string,
+): string {
+  if (!dateStr) {
+    return fallback;
+  }
+
+  const timestamp = new Date(dateStr).getTime();
+  if (!Number.isFinite(timestamp)) {
+    return fallback;
+  }
+
+  const diff = Date.now() - timestamp;
   const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
   const minutes = Math.round(diff / 60_000);
   if (Math.abs(minutes) < 60) return rtf.format(-minutes, 'minute');
@@ -72,7 +84,13 @@ function StatusBadge({ status }: { status: Review['status'] }) {
 
 type StatusFilter = 'published' | 'pending' | 'rejected' | undefined;
 
-export function ReviewSection({ orgId, productId }: { orgId: string; productId?: string }) {
+export function ReviewSection({
+  orgId,
+  externalProductId,
+}: {
+  orgId: string;
+  externalProductId?: string;
+}) {
   const t = useTranslations();
 
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -87,7 +105,11 @@ export function ReviewSection({ orgId, productId }: { orgId: string; productId?:
 
   const loadRequestIdRef = useRef(0);
 
-  async function loadReviews(page: number, status: StatusFilter, rating: number | undefined) {
+  async function loadReviews(
+    page: number,
+    status: StatusFilter,
+    rating: number | undefined,
+  ) {
     const requestId = loadRequestIdRef.current + 1;
     loadRequestIdRef.current = requestId;
 
@@ -97,8 +119,8 @@ export function ReviewSection({ orgId, productId }: { orgId: string; productId?:
     try {
       const response = await api.get(`/organization/${orgId}/reviews`, {
         params: {
-          scope: productId ? 'product' : 'all',
-          productId: productId ?? undefined,
+          scope: externalProductId ? 'product' : 'all',
+          externalProductId: externalProductId ?? undefined,
           status: status ?? undefined,
           rating: rating ?? undefined,
           page,
@@ -126,7 +148,7 @@ export function ReviewSection({ orgId, productId }: { orgId: string; productId?:
     setPagination(null);
     void loadReviews(currentPage, statusFilter, ratingFilter);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, productId]);
+  }, [orgId, externalProductId]);
 
   function handleStatusChange(next: StatusFilter) {
     setStatusFilter(next);
@@ -277,9 +299,9 @@ export function ReviewSection({ orgId, productId }: { orgId: string; productId?:
                 <p className="line-clamp-2 text-sm text-[color:var(--text)]">{review.text}</p>
 
                 {/* Product context badge (only on org-wide view) */}
-                {!productId ? (
+                {!externalProductId ? (
                   <p className="text-xs text-[color:var(--text-muted)]">
-                    {review.productId ? (
+                    {review.externalProductId ? (
                       <Badge className="border-blue-500/20 bg-blue-500/5 text-blue-300 text-xs">
                         {t('app.reviews.scopeLabel')}
                       </Badge>
@@ -293,7 +315,7 @@ export function ReviewSection({ orgId, productId }: { orgId: string; productId?:
 
                 {/* Timestamp */}
                 <p className="text-xs text-[color:var(--text-muted)]">
-                  {formatRelative(review.createdAt)}
+                  {formatRelative(review.createdAt, t('app.reviews.unknownDate'))}
                 </p>
 
                 {/* Actions */}

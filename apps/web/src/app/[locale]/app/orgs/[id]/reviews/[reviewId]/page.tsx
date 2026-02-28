@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
-import type { Product, Review } from '@/types';
+import type { Review } from '@/types';
 
 function parseError(error: unknown, fallback: string): string {
   if (
@@ -81,7 +81,6 @@ export default function ReviewDetailPage() {
   );
 
   const [review, setReview] = useState<Review | null>(null);
-  const [productName, setProductName] = useState<string | null>(null);
   const [state, setState] = useState<LoadState>('loading');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -97,22 +96,15 @@ export default function ReviewDetailPage() {
       setError(null);
 
       try {
-        const [reviewResponse, productsResponse] = await Promise.all([
-          api.get(`/organization/${orgId}/reviews/${reviewId}`),
-          api.get(`/organization/${orgId}/products`),
-        ]);
+        const reviewResponse = await api.get(
+          `/organization/${orgId}/reviews/${reviewId}`,
+        );
 
         if (cancelled) return;
 
         const fetchedReview = (reviewResponse.data?.review ?? null) as Review | null;
-        const products = (productsResponse.data?.products ?? []) as Product[];
 
         setReview(fetchedReview);
-
-        if (fetchedReview?.productId) {
-          const matched = products.find((p) => p._id === fetchedReview.productId);
-          setProductName(matched?.name ?? null);
-        }
 
         setState('ready');
       } catch (err) {
@@ -237,7 +229,10 @@ export default function ReviewDetailPage() {
               <div>
                 <span className="text-[color:var(--text-muted)]">{t('app.reviews.detailProduct')}: </span>
                 <span>
-                  {productName ?? (review.productId ? review.productId : t('app.reviews.orgLevelReview'))}
+                  {review.productName ??
+                    (review.externalProductId
+                      ? review.externalProductId
+                      : t('app.reviews.orgLevelReview'))}
                 </span>
               </div>
               <div>

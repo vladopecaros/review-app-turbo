@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
+import { AppError } from '../../errors/app.error';
 import { ReviewService, ReviewScope } from './review.service';
-import { ReviewStatus } from './review.types';
+import { Review, ReviewStatus } from './review.types';
 
 export class ReviewController {
   constructor(private readonly reviews: ReviewService) {}
@@ -11,53 +12,51 @@ export class ReviewController {
     const { organizationId } = req.params;
 
     if (!user?.id) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     if (!organizationId) {
-      return res.status(400).json({
-        message: 'Organization ID is required',
-      });
+      throw new AppError('Organization ID is required', 400);
     }
 
     if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
+      throw new AppError('Organization ID is not in correct format', 400);
     }
 
-    const productIdValue = req.query.productId as string | undefined;
-    const scope = this.parseScope(req.query.scope, productIdValue);
+    const externalProductIdValue = req.query.externalProductId as
+      | string
+      | undefined;
+    if (
+      externalProductIdValue !== undefined &&
+      (typeof externalProductIdValue !== 'string' ||
+        externalProductIdValue.trim().length === 0)
+    ) {
+      throw new AppError('externalProductId must be a non-empty string', 400);
+    }
+
+    const externalProductId = externalProductIdValue
+      ? externalProductIdValue.trim()
+      : undefined;
+    const scope = this.parseScope(req.query.scope, externalProductId);
     if (!scope) {
-      return res.status(400).json({ message: 'Invalid scope value' });
+      throw new AppError('Invalid scope value', 400);
     }
 
-    if (productIdValue && scope !== 'product') {
-      return res.status(400).json({
-        message: 'productId can only be used with scope=product',
-      });
-    }
-
-    let productId: Types.ObjectId | undefined;
-    if (productIdValue) {
-      if (!Types.ObjectId.isValid(productIdValue.toString())) {
-        return res.status(400).json({
-          message: 'Product ID is not in correct format',
-        });
-      }
-      productId = new Types.ObjectId(productIdValue.toString());
+    if (externalProductId && scope !== 'product') {
+      throw new AppError(
+        'externalProductId can only be used with scope=product',
+        400,
+      );
     }
 
     const status = this.parseStatus(req.query.status);
     if (status === null) {
-      return res.status(400).json({ message: 'Invalid status value' });
+      throw new AppError('Invalid status value', 400);
     }
 
     const rating = this.parseRating(req.query.rating);
     if (rating === null) {
-      return res
-        .status(400)
-        .json({ message: 'Rating must be an integer between 1 and 5' });
+      throw new AppError('Rating must be an integer between 1 and 5', 400);
     }
 
     const { page, limit, error } = this.parsePagination(
@@ -66,13 +65,13 @@ export class ReviewController {
     );
 
     if (error) {
-      return res.status(400).json({ message: error });
+      throw new AppError(error, 400);
     }
 
     const result = await this.reviews.listForOrg(
       new Types.ObjectId(organizationId.toString()),
       scope,
-      productId,
+      externalProductId,
       status,
       rating,
       page,
@@ -81,7 +80,7 @@ export class ReviewController {
     );
 
     return res.status(200).json({
-      reviews: result.reviews,
+      reviews: result.reviews.map((review) => this.toResponse(review)),
       pagination: result.pagination,
       message: 'Reviews fetched successfully',
     });
@@ -92,25 +91,19 @@ export class ReviewController {
     const { organizationId, reviewId } = req.params;
 
     if (!user?.id) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     if (!organizationId || !reviewId) {
-      return res
-        .status(400)
-        .json({ message: 'Organization ID and review ID are required' });
+      throw new AppError('Organization ID and review ID are required', 400);
     }
 
     if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res
-        .status(400)
-        .json({ message: 'Organization ID is not in correct format' });
+      throw new AppError('Organization ID is not in correct format', 400);
     }
 
     if (!Types.ObjectId.isValid(reviewId.toString())) {
-      return res
-        .status(400)
-        .json({ message: 'Review ID is not in correct format' });
+      throw new AppError('Review ID is not in correct format', 400);
     }
 
     const review = await this.reviews.getOne(
@@ -119,9 +112,10 @@ export class ReviewController {
       new Types.ObjectId(user.id),
     );
 
-    return res
-      .status(200)
-      .json({ review, message: 'Review fetched successfully' });
+    return res.status(200).json({
+      review: this.toResponse(review),
+      message: 'Review fetched successfully',
+    });
   }
 
   async updateStatus(req: Request, res: Response) {
@@ -130,32 +124,27 @@ export class ReviewController {
     const { status } = req.body;
 
     if (!user?.id) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     if (!organizationId || !reviewId) {
-      return res.status(400).json({
-        message: 'Organization ID and review ID are required',
-      });
+      throw new AppError('Organization ID and review ID are required', 400);
     }
 
     if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
+      throw new AppError('Organization ID is not in correct format', 400);
     }
 
     if (!Types.ObjectId.isValid(reviewId.toString())) {
-      return res.status(400).json({
-        message: 'Review ID is not in correct format',
-      });
+      throw new AppError('Review ID is not in correct format', 400);
     }
 
     const parsedStatus = this.parseStatus(status);
     if (!parsedStatus) {
-      return res.status(400).json({
-        message: 'Status must be one of published, pending, or rejected',
-      });
+      throw new AppError(
+        'Status must be one of published, pending, or rejected',
+        400,
+      );
     }
 
     const updated = await this.reviews.updateStatus(
@@ -166,7 +155,7 @@ export class ReviewController {
     );
 
     return res.status(200).json({
-      review: updated,
+      review: this.toResponse(updated),
       message: 'Review status updated successfully',
     });
   }
@@ -178,9 +167,12 @@ export class ReviewController {
     return n;
   }
 
-  private parseScope(value: unknown, productId?: string): ReviewScope | null {
+  private parseScope(
+    value: unknown,
+    externalProductId?: string,
+  ): ReviewScope | null {
     if (!value) {
-      return productId ? 'product' : 'all';
+      return externalProductId ? 'product' : 'all';
     }
 
     if (value === 'all' || value === 'org' || value === 'product') {
@@ -222,5 +214,10 @@ export class ReviewController {
     }
 
     return { page, limit };
+  }
+
+  private toResponse(review: Review) {
+    const { productId: _productId, ...payload } = review;
+    return payload;
   }
 }

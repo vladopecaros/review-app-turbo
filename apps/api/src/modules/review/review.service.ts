@@ -3,7 +3,7 @@ import { AppError } from '../../errors/app.error';
 import { OrganizationService } from '../organization/organization.service';
 import { ProductRepository } from '../product/product.repository';
 import { ReviewRepository } from './review.repository';
-import { ReviewStatus } from './review.types';
+import { PublicReview, Review, ReviewStatus } from './review.types';
 
 export type ReviewScope = 'all' | 'org' | 'product';
 
@@ -23,7 +23,7 @@ export class ReviewService {
       reviewerEmail: string;
     },
     organizationId: Types.ObjectId,
-  ) {
+  ): Promise<PublicReview> {
     let productId: Types.ObjectId | undefined;
 
     if (input.externalProductId) {
@@ -37,7 +37,7 @@ export class ReviewService {
       productId = product._id;
     }
 
-    return this.reviews.create({
+    const created = await this.reviews.create({
       organizationId,
       productId,
       rating: input.rating,
@@ -46,15 +46,21 @@ export class ReviewService {
       reviewerEmail: input.reviewerEmail,
       status: 'published',
     });
+
+    return this.toPublicReview(created, input.externalProductId);
   }
 
   async listPublic(
     organizationId: Types.ObjectId,
     scope: ReviewScope,
-    productId: Types.ObjectId | undefined,
+    externalProductId: string | undefined,
     page: number,
     limit: number,
   ) {
+    const productId = await this.resolveProductId(
+      organizationId,
+      externalProductId,
+    );
     const filter = {
       organizationId,
       status: 'published',
@@ -67,7 +73,7 @@ export class ReviewService {
   async listForOrg(
     organizationId: Types.ObjectId,
     scope: ReviewScope,
-    productId: Types.ObjectId | undefined,
+    externalProductId: string | undefined,
     status: ReviewStatus | undefined,
     rating: number | undefined,
     page: number,
@@ -83,6 +89,10 @@ export class ReviewService {
       throw new AppError('Unauthorized', 403);
     }
 
+    const productId = await this.resolveProductId(
+      organizationId,
+      externalProductId,
+    );
     const filter: Record<string, unknown> = {
       organizationId,
       ...this.buildScopeFilter(scope, productId),
@@ -113,7 +123,9 @@ export class ReviewService {
       throw new AppError('Unauthorized', 403);
     }
 
-    const review = await this.reviews.findOne(organizationId, reviewId);
+    const review = await this.reviews.findOne(organizationId, reviewId, {
+      includeProductName: true,
+    });
 
     if (!review) {
       throw new AppError('Review not found', 404);
@@ -169,5 +181,39 @@ export class ReviewService {
     }
 
     return {};
+  }
+
+  private toPublicReview(
+    review: Review,
+    externalProductId?: string,
+  ): PublicReview {
+    return {
+      _id: review._id,
+      externalProductId: externalProductId ?? review.externalProductId,
+      rating: review.rating,
+      text: review.text,
+      reviewerName: review.reviewerName,
+      createdAt: review.createdAt,
+    };
+  }
+
+  private async resolveProductId(
+    organizationId: Types.ObjectId,
+    externalProductId: string | undefined,
+  ): Promise<Types.ObjectId | undefined> {
+    if (!externalProductId) {
+      return undefined;
+    }
+
+    const product = await this.products.findByExternalId(
+      externalProductId,
+      organizationId,
+    );
+
+    if (!product) {
+      throw new AppError('Product not found', 404);
+    }
+
+    return product._id;
   }
 }
