@@ -20,6 +20,7 @@ import { ProductRepository } from './modules/product/product.repository';
 import { ProductService } from './modules/product/product.service';
 import { ProductController } from './modules/product/product.controller';
 import { createProductRoutes } from './modules/product/product.routes';
+import { createPublicProductRoutes } from './modules/product/publicProduct.routes';
 import { ReviewRepository } from './modules/review/review.repository';
 import { ReviewService } from './modules/review/review.service';
 import { ReviewController } from './modules/review/review.controller';
@@ -106,6 +107,11 @@ app.use(
 app.use(
   '/organization/:organizationId/reviews',
   createReviewRoutes(reviewController),
+);
+app.use(
+  '/public/products',
+  requireApiKey,
+  createPublicProductRoutes(productController),
 );
 app.use(
   '/public/reviews',

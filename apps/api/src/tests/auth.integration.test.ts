@@ -136,6 +136,15 @@ async function createProduct(
     });
 }
 
+async function getOrganizationApiKey(
+  accessToken: string,
+  organizationId: string,
+) {
+  return request
+    .get(`/organization/${organizationId}/create-api-key`)
+    .set('Authorization', `Bearer ${accessToken}`);
+}
+
 test('register returns user, null accessToken, and sends verification email', async () => {
   const email = 'user@example.com';
   const res = await registerUser(email);
@@ -562,6 +571,120 @@ test('organization member cannot create or update products', async () => {
 
   assert.equal(updateForbiddenRes.status, 403);
   assert.equal(updateForbiddenRes.body.message, 'Permission denied');
+});
+
+test('api key can bulk create products for organization', async () => {
+  const ownerEmail = 'owner-products-bulk@example.com';
+
+  const ownerToken = await registerAndExtractToken(ownerEmail);
+  await verifyEmail(ownerToken.token);
+  const ownerLogin = await loginUser(ownerEmail);
+  const ownerAccessToken = ownerLogin.body.accessToken as string;
+
+  const orgRes = await createOrganization(ownerAccessToken, 'org-product-bulk');
+  assert.equal(orgRes.status, 200);
+  const organizationId = orgRes.body.organization?._id?.toString();
+  assert.ok(organizationId);
+
+  const apiKeyRes = await getOrganizationApiKey(
+    ownerAccessToken,
+    organizationId!,
+  );
+  assert.equal(apiKeyRes.status, 200);
+  const apiKey = apiKeyRes.body.key as string;
+  assert.ok(apiKey);
+
+  const bulkRes = await request
+    .post('/public/products/bulk')
+    .set('x-api-key', apiKey)
+    .send({
+      products: [
+        {
+          externalProductId: 'shopify-100',
+          name: 'Basic Plan',
+          slug: 'basic-plan',
+          active: true,
+        },
+        {
+          externalProductId: 'shopify-101',
+          name: 'Pro Plan',
+          slug: 'pro-plan',
+        },
+      ],
+    });
+
+  assert.equal(bulkRes.status, 200);
+  assert.equal(bulkRes.body.result.createdCount, 2);
+  assert.equal(bulkRes.body.result.failedCount, 0);
+
+  const listRes = await request
+    .get(`/organization/${organizationId}/products`)
+    .set('Authorization', `Bearer ${ownerAccessToken}`);
+  assert.equal(listRes.status, 200);
+  assert.equal(listRes.body.products.length, 2);
+});
+
+test('api key bulk create returns per-item duplicate errors', async () => {
+  const ownerEmail = 'owner-products-bulk-duplicate@example.com';
+
+  const ownerToken = await registerAndExtractToken(ownerEmail);
+  await verifyEmail(ownerToken.token);
+  const ownerLogin = await loginUser(ownerEmail);
+  const ownerAccessToken = ownerLogin.body.accessToken as string;
+
+  const orgRes = await createOrganization(
+    ownerAccessToken,
+    'org-product-bulk-duplicate',
+  );
+  assert.equal(orgRes.status, 200);
+  const organizationId = orgRes.body.organization?._id?.toString();
+  assert.ok(organizationId);
+
+  const apiKeyRes = await getOrganizationApiKey(
+    ownerAccessToken,
+    organizationId!,
+  );
+  assert.equal(apiKeyRes.status, 200);
+  const apiKey = apiKeyRes.body.key as string;
+  assert.ok(apiKey);
+
+  const firstRes = await request
+    .post('/public/products/bulk')
+    .set('x-api-key', apiKey)
+    .send({
+      products: [
+        {
+          externalProductId: 'sync-1',
+          name: 'Sync Product',
+          slug: 'sync-product',
+        },
+      ],
+    });
+  assert.equal(firstRes.status, 200);
+  assert.equal(firstRes.body.result.createdCount, 1);
+
+  const secondRes = await request
+    .post('/public/products/bulk')
+    .set('x-api-key', apiKey)
+    .send({
+      products: [
+        {
+          externalProductId: 'sync-1',
+          name: 'Duplicate Product',
+          slug: 'sync-product-2',
+        },
+        {
+          externalProductId: 'sync-2',
+          name: 'Another Product',
+          slug: 'another-product',
+        },
+      ],
+    });
+
+  assert.equal(secondRes.status, 200);
+  assert.equal(secondRes.body.result.createdCount, 1);
+  assert.equal(secondRes.body.result.failedCount, 1);
+  assert.match(secondRes.body.result.errors[0].message, /already exists/i);
 });
 
 test('organization access is forbidden for non-members', async () => {
