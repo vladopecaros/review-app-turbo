@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
+import { InvitationActions } from '@/components/app/InvitationActions';
 import { ReviewSection } from '@/components/app/ReviewSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import type { Organization } from '@/types';
 
-type LoadState = 'loading' | 'ready' | 'error';
+type LoadState = 'loading' | 'ready' | 'invited' | 'error';
 
 export default function OrgReviewsPage() {
   const t = useTranslations();
@@ -22,6 +23,7 @@ export default function OrgReviewsPage() {
   const [org, setOrg] = useState<Organization | null>(null);
   const [state, setState] = useState<LoadState>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [invitationId, setInvitationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orgId) return;
@@ -37,7 +39,24 @@ export default function OrgReviewsPage() {
         if (cancelled) return;
 
         const payload = (response.data?.organization ?? response.data) as Organization;
+        const membershipStatus = response.data?.membershipStatus as
+          | 'active'
+          | 'invited'
+          | undefined;
+        const pendingInvitationId = response.data?.invitationId as
+          | string
+          | null
+          | undefined;
+
         setOrg(payload);
+
+        if (membershipStatus === 'invited' && pendingInvitationId) {
+          setInvitationId(pendingInvitationId);
+          setState('invited');
+          return;
+        }
+
+        setInvitationId(null);
         setState('ready');
       } catch (err) {
         if (cancelled) return;
@@ -58,6 +77,22 @@ export default function OrgReviewsPage() {
       <div className="space-y-4">
         <Skeleton className="h-28 rounded-xl" />
         <Skeleton className="h-80 rounded-xl" />
+      </div>
+    );
+  }
+
+  if (state === 'invited' && invitationId) {
+    return (
+      <div>
+        <Card className="mb-5 pb-2">
+          <CardHeader>
+            <CardTitle>{t('app.reviews.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-[color:var(--text-muted)]">{t('app.orgDetail.pending')}</p>
+          </CardContent>
+        </Card>
+        <InvitationActions invitationId={invitationId} />
       </div>
     );
   }

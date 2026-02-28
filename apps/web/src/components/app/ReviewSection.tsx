@@ -186,8 +186,8 @@ export function ReviewSection({
 
     try {
       await api.patch(`/organization/${orgId}/reviews/${review._id}/status`, { status: action });
-      setReviews((prev) => prev.map((r) => (r._id === review._id ? { ...r, status: action } : r)));
       setSuccess(action === 'published' ? t('app.reviews.approveSuccess') : t('app.reviews.rejectSuccess'));
+      await loadReviews(currentPage, statusFilter, ratingFilter);
     } catch (err) {
       setError(parseError(err, t('app.reviews.moderationError')));
     }
