@@ -2,6 +2,15 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { ProductService } from './product.service';
 
+type BulkProductInput = {
+  externalProductId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  active: boolean;
+  metadata?: Record<string, unknown>;
+};
+
 export class ProductController {
   constructor(private readonly products: ProductService) {}
 
@@ -136,6 +145,109 @@ export class ProductController {
     return res.status(200).json({
       product,
       message: 'Product successfully created',
+    });
+  }
+
+  async createBulkWithApiKey(req: Request, res: Response) {
+    const { apiKeyOrganizationId } = req;
+    const body =
+      req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : null;
+    const products = body?.products;
+
+    if (!apiKeyOrganizationId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    if (!Array.isArray(products) || products.length === 0) {
+      return res.status(400).json({
+        message: 'Products array is required',
+      });
+    }
+
+    if (products.length > 500) {
+      return res.status(400).json({
+        message: 'Products array cannot exceed 500 items',
+      });
+    }
+
+    const normalizedProducts: BulkProductInput[] = [];
+
+    for (let i = 0; i < products.length; i += 1) {
+      const entry = products[i];
+
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      const payload = entry as Record<string, unknown>;
+      const externalProductId = payload.externalProductId;
+      const name = payload.name;
+      const slug = payload.slug;
+      const description = payload.description;
+      const active = payload.active;
+      const metadata = payload.metadata;
+
+      if (
+        typeof externalProductId !== 'string' ||
+        externalProductId.trim().length === 0 ||
+        typeof name !== 'string' ||
+        name.trim().length < 3 ||
+        typeof slug !== 'string' ||
+        slug.trim().length < 3
+      ) {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      if (description !== undefined && typeof description !== 'string') {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      if (active !== undefined && typeof active !== 'boolean') {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      if (
+        metadata !== undefined &&
+        (typeof metadata !== 'object' ||
+          metadata === null ||
+          Array.isArray(metadata))
+      ) {
+        return res.status(400).json({
+          message: `Invalid product payload at index ${i}`,
+        });
+      }
+
+      normalizedProducts.push({
+        externalProductId: externalProductId.trim(),
+        name: name.trim(),
+        slug: slug.trim(),
+        description:
+          typeof description === 'string' && description.trim().length > 0
+            ? description.trim()
+            : undefined,
+        active: typeof active === 'boolean' ? active : true,
+        metadata: metadata as Record<string, unknown> | undefined,
+      });
+    }
+
+    const result = await this.products.createBulkForOrganization(
+      new Types.ObjectId(apiKeyOrganizationId),
+      normalizedProducts,
+    );
+
+    return res.status(200).json({
+      result,
+      message: 'Bulk product sync completed',
     });
   }
 

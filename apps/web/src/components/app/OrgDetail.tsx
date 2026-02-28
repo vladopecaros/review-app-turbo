@@ -1,7 +1,9 @@
 import { useTranslations } from 'next-intl';
+import Link from 'next/link';
 
 import { ApiKeySection } from '@/components/app/ApiKeySection';
 import { InviteUserForm } from '@/components/app/InviteUserForm';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Organization } from '@/types';
 
@@ -25,6 +27,19 @@ export function OrgDetail({ org }: { org: Organization }) {
       </Card>
 
       <ApiKeySection orgId={org._id} />
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('app.orgDetail.products.title')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="mb-3 text-sm text-[color:var(--text-muted)]">{t('app.orgDetail.products.description')}</p>
+          <Link href={`/app/orgs/${org._id}/products`}>
+            <Button variant="outline">{t('app.orgDetail.products.openPage')}</Button>
+          </Link>
+        </CardContent>
+      </Card>
+
       <InviteUserForm orgId={org._id} />
     </div>
   );

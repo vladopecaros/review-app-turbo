@@ -12,6 +12,17 @@ export interface Organization {
   slug: string;
 }
 
+export interface Product {
+  _id: string;
+  externalProductId: string;
+  organizationId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  active: boolean;
+  metadata?: Record<string, unknown>;
+}
+
 export interface OrganizationMembership {
   _id: string;
   userId: string;

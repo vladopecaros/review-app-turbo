@@ -19,6 +19,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, clearAuth } = useAuthStore();
   const { isAuthenticated, isLoading } = useAuthGuard();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const orgMatch = pathname.match(/^\/app\/orgs\/([^/]+)/);
+  const orgId = orgMatch?.[1];
 
   async function handleLogout() {
     setIsLoggingOut(true);
@@ -40,6 +42,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: '/app', label: t('appShell.dashboard') },
+    ...(orgId
+      ? [
+          {
+            href: `/app/orgs/${orgId}`,
+            label: t('appShell.organization'),
+          },
+          {
+            href: `/app/orgs/${orgId}/products`,
+            label: t('appShell.products'),
+          },
+        ]
+      : []),
     { href: '/security', label: t('nav.security') },
   ];
 
@@ -56,9 +70,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <nav className="grid gap-2">
-              {navItems.map((item) => {
-                const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-                return (
+              {(() => {
+                const activeItem =
+                  navItems
+                    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+                    .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
+
+                return navItems.map((item) => {
+                  const active = activeItem === item.href;
+                  return (
                   <Link
                     key={item.href}
                     href={item.href}
@@ -71,8 +91,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   >
                     {item.label}
                   </Link>
-                );
-              })}
+                  );
+                });
+              })()}
             </nav>
 
             <div className="mt-auto rounded-xl border border-white/5 bg-white/[0.02] p-3">
@@ -96,10 +117,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </div>
 
-      <nav className="fixed inset-x-4 bottom-4 z-30 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-[rgba(12,16,22,0.92)] p-2 backdrop-blur md:hidden">
-        {navItems.map((item) => {
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          return (
+      <nav
+        className="fixed inset-x-4 bottom-4 z-30 grid gap-2 rounded-xl border border-white/10 bg-[rgba(12,16,22,0.92)] p-2 backdrop-blur md:hidden"
+        style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+      >
+        {(() => {
+          const activeItem =
+            navItems
+              .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+              .sort((a, b) => b.href.length - a.href.length)[0]?.href ?? null;
+
+          return navItems.map((item) => {
+            const active = activeItem === item.href;
+            return (
             <Link
               key={item.href}
               href={item.href}
@@ -110,8 +140,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             >
               {item.label}
             </Link>
-          );
-        })}
+            );
+          });
+        })()}
       </nav>
     </div>
   );
