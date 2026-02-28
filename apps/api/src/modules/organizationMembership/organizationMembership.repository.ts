@@ -65,6 +65,18 @@ export class OrganizationMembershipRepository {
     return org;
   }
 
+  async findAnyByOrganizationIdForUserId(
+    organizationId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<OrganizationMembershipDocument | null> {
+    const org = await OrganizationMembershipModel.findOne({
+      organizationId,
+      userId,
+    });
+
+    return org;
+  }
+
   private isDuplicateKeyError(error: unknown): error is { code: number } {
     return (
       typeof error === 'object' &&

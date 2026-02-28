@@ -4,16 +4,16 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import axios from 'axios';
 
 import { OrgDetail } from '@/components/app/OrgDetail';
+import { InvitationActions } from '@/components/app/InvitationActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/lib/api';
 import type { Organization } from '@/types';
 
-type LoadState = 'loading' | 'ready' | 'forbidden' | 'error';
+type LoadState = 'loading' | 'ready' | 'invited' | 'error';
 
 export default function OrgDetailPage() {
   const t = useTranslations();
@@ -23,6 +23,7 @@ export default function OrgDetailPage() {
   const [org, setOrg] = useState<Organization | null>(null);
   const [state, setState] = useState<LoadState>('loading');
   const [error, setError] = useState<string | null>(null);
+  const [invitationId, setInvitationId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orgId) {
@@ -42,17 +43,30 @@ export default function OrgDetailPage() {
         }
 
         const payload = (response.data?.organization ?? response.data) as Organization;
+        const membershipStatus = response.data?.membershipStatus as
+          | 'active'
+          | 'invited'
+          | undefined;
+        const pendingInvitationId = response.data?.invitationId as
+          | string
+          | null
+          | undefined;
+
         setOrg(payload);
+
+        if (membershipStatus === 'invited' && pendingInvitationId) {
+          setInvitationId(pendingInvitationId);
+          setState('invited');
+          return;
+        }
+
+        setInvitationId(null);
         setState('ready');
       } catch (err) {
         if (cancelled) {
           return;
         }
 
-        if (axios.isAxiosError(err) && err.response?.status === 403) {
-          setState('forbidden');
-          return;
-        }
 
         setState('error');
         setError(err instanceof Error ? err.message : t('common.error'));
@@ -76,19 +90,19 @@ export default function OrgDetailPage() {
     );
   }
 
-  if (state === 'forbidden') {
+  if (state === 'invited' && invitationId) {
     return (
-      <Card className="pb-2">
-        <CardHeader>
-          <CardTitle>{t('app.orgDetail.title')}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-[color:var(--text-muted)]">{t('app.orgDetail.pending')}</p>
-          <Link href="/app">
-            <Button variant="outline">{t('app.invitation.backToApp')}</Button>
-          </Link>
-        </CardContent>
-      </Card>
+      <div className="pb-20 md:pb-0">
+        <Card className="mb-5 pb-2">
+          <CardHeader>
+            <CardTitle>{t('app.orgDetail.title')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-[color:var(--text-muted)]">{t('app.orgDetail.pending')}</p>
+          </CardContent>
+        </Card>
+        <InvitationActions invitationId={invitationId} />
+      </div>
     );
   }
 

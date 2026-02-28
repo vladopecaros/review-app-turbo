@@ -101,7 +101,10 @@ export const openApiSpec = {
           },
         ],
         responses: {
-          '200': { description: 'Organization fetched successfully' },
+          '200': {
+            description:
+              'Organization fetched successfully (includes membershipStatus and invitationId for invited members)',
+          },
           '400': { description: 'Invalid organization id format' },
           '403': { description: 'Unauthorized to access organization' },
         },
@@ -110,6 +113,25 @@ export const openApiSpec = {
     '/organization/{id}/invite-user': {
       post: {
         summary: 'Invite user to organization',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['invitedUserRole'],
+                properties: {
+                  invitedUserId: { type: 'string' },
+                  invitedUserEmail: { type: 'string', format: 'email' },
+                  invitedUserRole: {
+                    type: 'string',
+                    enum: ['admin', 'member'],
+                  },
+                },
+              },
+            },
+          },
+        },
         parameters: [
           {
             in: 'path',

@@ -20,12 +20,13 @@ export class EmailService {
     organizationName: string,
     role: 'owner' | 'member' | 'admin',
     email: string,
+    invitationId: string,
   ) {
     await mailer.sendMail({
       to: email,
       from: `${EnvironmentVariables.PRODUCT_NAME} <no-reply@yourapp.com>`,
       subject: `You're invited to an organization`,
-      html: organizationInviteTemplate(organizationName, role),
+      html: organizationInviteTemplate(organizationName, role, invitationId),
     });
   }
 }

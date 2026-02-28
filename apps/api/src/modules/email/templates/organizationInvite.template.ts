@@ -3,6 +3,7 @@ import { EnvironmentVariables } from '../../../helpers/env/environmentVariables'
 export const organizationInviteTemplate = (
   organizationName: string,
   role: string,
+  invitationId: string,
 ) => {
   return `
     <!DOCTYPE html>
@@ -45,8 +46,8 @@ export const organizationInviteTemplate = (
                   <table role="presentation" style="margin: 0 auto; border-collapse: collapse;">
                     <tr>
                       <td style="border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
-                        <a href="${EnvironmentVariables.FRONTEND_URL}" style="display: inline-block; padding: 16px 48px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; letter-spacing: 0.5px;">
-                          GO TO DASHBOARD
+                        <a href="${EnvironmentVariables.FRONTEND_URL}/app/invitations/${invitationId}" style="display: inline-block; padding: 16px 48px; font-size: 16px; font-weight: 600; color: #ffffff; text-decoration: none; border-radius: 8px; letter-spacing: 0.5px;">
+                          REVIEW INVITATION
                         </a>
                       </td>
                     </tr>

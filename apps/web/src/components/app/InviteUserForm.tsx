@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { isAxiosError } from 'axios';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +12,7 @@ import type { InvitedUserRole } from '@/types';
 
 export function InviteUserForm({ orgId }: { orgId: string }) {
   const t = useTranslations();
-  const [userId, setUserId] = useState('');
+  const [email, setEmail] = useState('');
   const [role, setRole] = useState<InvitedUserRole>('member');
   const [inviteLink, setInviteLink] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,7 +28,7 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
 
     try {
       const response = await api.post(`/organization/${orgId}/invite-user`, {
-        invitedUserId: userId,
+        invitedUserEmail: email,
         invitedUserRole: role,
       });
 
@@ -39,7 +40,13 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
       const origin = window.location.origin;
       setInviteLink(`${origin}/app/invitations/${invitationId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'));
+      if (isAxiosError(err) && err.response?.status === 404) {
+        setError(t('app.orgDetail.invite.userNotFoundError'));
+      } else if (isAxiosError(err) && err.response?.status === 403) {
+        setError(t('app.orgDetail.invite.forbiddenError'));
+      } else {
+        setError(err instanceof Error ? err.message : t('common.error'));
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -68,12 +75,13 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
         ) : null}
 
         <div>
-          <Label htmlFor="invite-user-id">{t('app.orgDetail.invite.userIdLabel')}</Label>
+          <Label htmlFor="invite-user-email">{t('app.orgDetail.invite.userEmailLabel')}</Label>
           <Input
-            id="invite-user-id"
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            placeholder="64f0..."
+            id="invite-user-email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="teammate@example.com"
             required
           />
         </div>
@@ -91,7 +99,7 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
           </select>
         </div>
 
-        <Button type="submit" disabled={isSubmitting || !userId.trim()}>
+        <Button type="submit" disabled={isSubmitting || !email.trim()}>
           {isSubmitting ? t('app.orgDetail.invite.submitting') : t('app.orgDetail.invite.submit')}
         </Button>
       </form>

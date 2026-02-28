@@ -171,11 +171,12 @@
         "confirmAction": "Generate",
         "warning": "This key will only be shown once. Copy it now.",
         "copied": "Copied!",
-        "generatedState": "Key generated in this session. Store it securely."
+        "generatedState": "Key generated in this session. Store it securely.",
+        "forbiddenError": "Only organization owners or admins can generate or rotate API keys."
       },
       "invite": {
         "title": "Invite a member",
-        "userIdLabel": "User ID",
+        "userEmailLabel": "User email",
         "roleLabel": "Role",
         "roleAdmin": "Admin",
         "roleMember": "Member",
@@ -183,7 +184,9 @@
         "submitting": "Sending...",
         "successPrefix": "Invite sent! Share this link:",
         "copyLink": "Copy invite link",
-        "copied": "Copied!"
+        "copied": "Copied!",
+        "userNotFoundError": "This user doesn't have a Reviewlico account yet. Ask them to sign up first, then send the invite again.",
+        "forbiddenError": "Only organization owners or admins can invite members to this organization."
       }
     },
     "invitation": {

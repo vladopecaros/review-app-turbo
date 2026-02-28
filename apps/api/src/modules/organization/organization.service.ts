@@ -105,16 +105,28 @@ export class OrganizationService {
   }
 
   async getById(organizationId: Types.ObjectId, userId: Types.ObjectId) {
-    const hasAccess = await this.checkOrganizationMembership(
-      organizationId,
-      userId,
-    );
+    const membership =
+      await this.organizationMemberships.findAnyByOrganizationIdForUserId(
+        organizationId,
+        userId,
+      );
 
-    if (hasAccess) {
-      return this.organizations.findById(organizationId);
-    } else {
+    if (!membership) {
       throw new AppError('Unauthorized', 403);
     }
+
+    const organization = await this.organizations.findById(organizationId);
+
+    if (!organization) {
+      throw new AppError('Organization not found', 404);
+    }
+
+    return {
+      organization,
+      membershipStatus: membership.status,
+      invitationId:
+        membership.status === 'invited' ? membership._id.toString() : null,
+    };
   }
 
   public async checkOrganizationMembership(
@@ -133,7 +145,8 @@ export class OrganizationService {
 
   async inviteUser(
     currentUserId: Types.ObjectId,
-    invitedUserId: Types.ObjectId,
+    invitedUserId: Types.ObjectId | null,
+    invitedUserEmail: string | null,
     organizationId: Types.ObjectId,
     invitedUserRole: 'admin' | 'member',
   ) {
@@ -146,7 +159,13 @@ export class OrganizationService {
       throw new AppError('Permission denied', 403);
     }
 
-    const userDetails = await this.userService.getUserById(invitedUserId);
+    let userDetails = null;
+
+    if (invitedUserEmail) {
+      userDetails = await this.userService.getUserByEmail(invitedUserEmail);
+    } else if (invitedUserId) {
+      userDetails = await this.userService.getUserById(invitedUserId);
+    }
 
     if (!userDetails) {
       throw new AppError('User not found', 404);
@@ -157,21 +176,18 @@ export class OrganizationService {
       currentUserId,
     );
 
-    if (!organizationDetails) {
-      throw new AppError('Organization not found', 404);
-    }
-
     const created = await this.organizationMemberships.create({
       organizationId,
-      userId: invitedUserId,
+      userId: userDetails._id,
       role: invitedUserRole ?? 'member',
       status: 'invited',
     });
 
     await this.emailService.sendOrganizationInvite(
-      organizationDetails.name,
+      organizationDetails.organization.name,
       invitedUserRole,
       userDetails.email,
+      created._id.toString(),
     );
 
     return created;
