@@ -208,7 +208,7 @@ export const openApiSpec = {
                   externalProductId: {
                     type: 'string',
                     description:
-                      "Your own product ID (as provided when registering the product). Omit for org-level reviews.",
+                      'Your own product ID (as provided when registering the product). Omit for org-level reviews.',
                   },
                   rating: { type: 'integer', minimum: 1, maximum: 5 },
                   text: { type: 'string', maxLength: 5000 },
