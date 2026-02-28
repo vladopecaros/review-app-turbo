@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 
@@ -269,6 +270,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
           <div className="grid grid-cols-1 gap-3">
             {products.map((product) => {
               const isEditing = editingProduct?._id === product._id;
+              const encodedExternalProductId = encodeURIComponent(product.externalProductId);
 
               return (
                 <div key={product._id} className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -335,6 +337,11 @@ export function ProductSection({ orgId }: { orgId: string }) {
                         >
                           {isDeleting === product._id ? t('app.orgDetail.products.deleting') : t('app.orgDetail.products.delete')}
                         </Button>
+                        <Link href={`/app/orgs/${orgId}/products/${encodedExternalProductId}/reviews`}>
+                          <Button size="sm" variant="secondary">
+                            {t('appShell.reviews')}
+                          </Button>
+                        </Link>
                       </div>
                     </div>
                   )}

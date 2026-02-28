@@ -94,6 +94,7 @@ Don't scaffold or implement future phases unless explicitly asked.
 - Refresh token is an HTTP-only cookie scoped to path `/auth/refresh` only — not accessible anywhere else, don't expect it in other requests
 - next-intl locale prefix is `'never'` — URLs are `/page` not `/en/page`, never add locale prefix manually to links or redirects
 - `reviewerEmail` and `status` must always be stripped before returning public review responses — enforce this in the service layer, not the controller
+- Review CRUD uses `externalProductId` end-to-end; never expose internal product `_id` in review responses
 - Raw API key is shown exactly once on creation — it is never stored, only the SHA-256 hash and the first 8-char `keyPrefix` are persisted
 
 ---

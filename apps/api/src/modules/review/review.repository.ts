@@ -52,6 +52,22 @@ export class ReviewRepository {
     };
   }
 
+  async findOne(
+    organizationId: Types.ObjectId,
+    reviewId: Types.ObjectId,
+    options?: { includeProductName?: boolean },
+  ): Promise<Review | null> {
+    const populateFields = options?.includeProductName
+      ? 'externalProductId name'
+      : 'externalProductId';
+    const doc = await ReviewModel.findOne({
+      _id: reviewId,
+      organizationId,
+    }).populate('productId', populateFields);
+    if (!doc) return null;
+    return this.toDomain(doc);
+  }
+
   async updateStatus(
     organizationId: Types.ObjectId,
     reviewId: Types.ObjectId,
@@ -61,7 +77,7 @@ export class ReviewRepository {
       { _id: reviewId, organizationId },
       { $set: { status } },
       { new: true },
-    );
+    ).populate('productId', 'externalProductId');
 
     if (!updated) {
       return null;
@@ -83,7 +99,8 @@ export class ReviewRepository {
       ReviewModel.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(safeLimit),
+        .limit(safeLimit)
+        .populate('productId', 'externalProductId'),
       ReviewModel.countDocuments(filter),
     ]);
 
@@ -101,9 +118,12 @@ export class ReviewRepository {
   }
 
   private toDomain(doc: ReviewDocument): Review {
+    const productId = this.getInternalProductId(doc);
     return {
       _id: doc._id,
-      productId: doc.productId,
+      productId,
+      externalProductId: this.getExternalProductId(doc),
+      productName: this.getProductName(doc),
       organizationId: doc.organizationId,
       rating: doc.rating,
       text: doc.text,
@@ -118,11 +138,71 @@ export class ReviewRepository {
   private toPublicDomain(doc: ReviewDocument): PublicReview {
     return {
       _id: doc._id,
-      productId: doc.productId,
+      externalProductId: this.getExternalProductId(doc),
       rating: doc.rating,
       text: doc.text,
       reviewerName: doc.reviewerName,
       createdAt: doc.createdAt,
     };
+  }
+
+  private getExternalProductId(doc: ReviewDocument): string | undefined {
+    const productValue = doc.productId as unknown;
+    if (!productValue || typeof productValue !== 'object') {
+      return undefined;
+    }
+
+    if (!('externalProductId' in productValue)) {
+      return undefined;
+    }
+
+    const externalProductId = (productValue as { externalProductId?: unknown })
+      .externalProductId;
+    return typeof externalProductId === 'string'
+      ? externalProductId
+      : undefined;
+  }
+
+  private getProductName(doc: ReviewDocument): string | undefined {
+    const productValue = doc.productId as unknown;
+    if (!productValue || typeof productValue !== 'object') {
+      return undefined;
+    }
+
+    if (!('name' in productValue)) {
+      return undefined;
+    }
+
+    const nameValue = (productValue as { name?: unknown }).name;
+    return typeof nameValue === 'string' ? nameValue : undefined;
+  }
+
+  private getInternalProductId(
+    doc: ReviewDocument,
+  ): Types.ObjectId | undefined {
+    const productValue = doc.productId as unknown;
+    if (!productValue) {
+      return undefined;
+    }
+
+    if (productValue instanceof Types.ObjectId) {
+      return productValue;
+    }
+
+    if (
+      typeof productValue === 'object' &&
+      productValue !== null &&
+      '_id' in productValue
+    ) {
+      const idValue = (productValue as { _id?: unknown })._id;
+      if (idValue instanceof Types.ObjectId) {
+        return idValue;
+      }
+      if (typeof idValue === 'string' && Types.ObjectId.isValid(idValue)) {
+        return new Types.ObjectId(idValue);
+      }
+    }
+
+    return undefined;
   }
 }

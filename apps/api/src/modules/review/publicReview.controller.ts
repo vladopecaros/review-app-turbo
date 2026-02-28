@@ -1,16 +1,12 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
-import { ProductRepository } from '../product/product.repository';
+import { AppError } from '../../errors/app.error';
 import { ReviewService, ReviewScope } from './review.service';
-import { Review } from './review.types';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class PublicReviewController {
-  constructor(
-    private readonly reviews: ReviewService,
-    private readonly products: ProductRepository,
-  ) {}
+  constructor(private readonly reviews: ReviewService) {}
 
   async create(req: Request, res: Response) {
     const { apiKeyOrganizationId } = req;
@@ -18,37 +14,27 @@ export class PublicReviewController {
       req.body;
 
     if (!apiKeyOrganizationId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     if (typeof rating !== 'number' || !Number.isInteger(rating)) {
-      return res.status(400).json({
-        message: 'Rating must be an integer between 1 and 5',
-      });
+      throw new AppError('Rating must be an integer between 1 and 5', 400);
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(400).json({
-        message: 'Rating must be an integer between 1 and 5',
-      });
+      throw new AppError('Rating must be an integer between 1 and 5', 400);
     }
 
     if (typeof text !== 'string' || text.trim().length === 0) {
-      return res.status(400).json({
-        message: 'Review text is required',
-      });
+      throw new AppError('Review text is required', 400);
     }
 
     if (text.trim().length > 5000) {
-      return res.status(400).json({
-        message: 'Review text must be 5000 characters or less',
-      });
+      throw new AppError('Review text must be 5000 characters or less', 400);
     }
 
     if (typeof reviewerName !== 'string' || reviewerName.trim().length === 0) {
-      return res.status(400).json({
-        message: 'Reviewer name is required',
-      });
+      throw new AppError('Reviewer name is required', 400);
     }
 
     if (
@@ -56,9 +42,7 @@ export class PublicReviewController {
       reviewerEmail.trim().length === 0 ||
       !EMAIL_REGEX.test(reviewerEmail.trim())
     ) {
-      return res.status(400).json({
-        message: 'Reviewer email must be a valid email address',
-      });
+      throw new AppError('Reviewer email must be a valid email address', 400);
     }
 
     if (
@@ -67,9 +51,7 @@ export class PublicReviewController {
       (typeof externalProductId !== 'string' ||
         externalProductId.trim().length === 0)
     ) {
-      return res.status(400).json({
-        message: 'externalProductId must be a non-empty string',
-      });
+      throw new AppError('externalProductId must be a non-empty string', 400);
     }
 
     const created = await this.reviews.createPublicReview(
@@ -85,7 +67,7 @@ export class PublicReviewController {
     );
 
     return res.status(200).json({
-      review: this.toPublic(created),
+      review: created,
       message: 'Review submitted successfully',
     });
   }
@@ -94,34 +76,33 @@ export class PublicReviewController {
     const { apiKeyOrganizationId } = req;
 
     if (!apiKeyOrganizationId) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     const externalProductIdValue = req.query.externalProductId as
       | string
       | undefined;
-    const scope = this.parseScope(req.query.scope, externalProductIdValue);
+    if (
+      externalProductIdValue !== undefined &&
+      (typeof externalProductIdValue !== 'string' ||
+        externalProductIdValue.trim().length === 0)
+    ) {
+      throw new AppError('externalProductId must be a non-empty string', 400);
+    }
+
+    const externalProductId = externalProductIdValue
+      ? externalProductIdValue.trim()
+      : undefined;
+    const scope = this.parseScope(req.query.scope, externalProductId);
     if (!scope) {
-      return res.status(400).json({ message: 'Invalid scope value' });
+      throw new AppError('Invalid scope value', 400);
     }
 
-    if (externalProductIdValue && scope !== 'product') {
-      return res.status(400).json({
-        message: 'externalProductId can only be used with scope=product',
-      });
-    }
-
-    let productId: Types.ObjectId | undefined;
-    if (externalProductIdValue) {
-      const orgId = new Types.ObjectId(apiKeyOrganizationId);
-      const product = await this.products.findByExternalId(
-        externalProductIdValue,
-        orgId,
+    if (externalProductId && scope !== 'product') {
+      throw new AppError(
+        'externalProductId can only be used with scope=product',
+        400,
       );
-      if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
-      }
-      productId = product._id;
     }
 
     const { page, limit, error } = this.parsePagination(
@@ -130,13 +111,13 @@ export class PublicReviewController {
     );
 
     if (error) {
-      return res.status(400).json({ message: error });
+      throw new AppError(error, 400);
     }
 
     const result = await this.reviews.listPublic(
       new Types.ObjectId(apiKeyOrganizationId),
       scope,
-      productId,
+      externalProductId,
       page,
       limit,
     );
@@ -183,16 +164,5 @@ export class PublicReviewController {
     }
 
     return { page, limit };
-  }
-
-  private toPublic(review: Review) {
-    return {
-      _id: review._id,
-      productId: review.productId,
-      rating: review.rating,
-      text: review.text,
-      reviewerName: review.reviewerName,
-      createdAt: review.createdAt,
-    };
   }
 }
