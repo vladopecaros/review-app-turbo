@@ -218,6 +218,7 @@ export class ReviewController {
 
   private toResponse(review: Review) {
     const { productId: _productId, ...payload } = review;
+    void _productId;
     return payload;
   }
 }
