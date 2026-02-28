@@ -139,7 +139,8 @@ export function ProductSection({ orgId }: { orgId: string }) {
     setSuccess(null);
 
     try {
-      await api.put(`/organization/${orgId}/products/${externalProductId}`, {
+      const encodedExternalProductId = encodeURIComponent(externalProductId);
+      await api.put(`/organization/${orgId}/products/${encodedExternalProductId}`, {
         name: editForm.name,
         slug: editForm.slug,
         description: editForm.description || undefined,
@@ -167,7 +168,8 @@ export function ProductSection({ orgId }: { orgId: string }) {
     setSuccess(null);
 
     try {
-      await api.delete(`/organization/${orgId}/products/${product.externalProductId}`);
+      const encodedExternalProductId = encodeURIComponent(product.externalProductId);
+      await api.delete(`/organization/${orgId}/products/${encodedExternalProductId}`);
       setSuccess(t('app.orgDetail.products.deleteSuccess'));
       await loadProducts();
     } catch (err) {
