@@ -105,16 +105,28 @@ export class OrganizationService {
   }
 
   async getById(organizationId: Types.ObjectId, userId: Types.ObjectId) {
-    const hasAccess = await this.checkOrganizationMembership(
-      organizationId,
-      userId,
-    );
+    const membership =
+      await this.organizationMemberships.findAnyByOrganizationIdForUserId(
+        organizationId,
+        userId,
+      );
 
-    if (hasAccess) {
-      return this.organizations.findById(organizationId);
-    } else {
+    if (!membership) {
       throw new AppError('Unauthorized', 403);
     }
+
+    const organization = await this.organizations.findById(organizationId);
+
+    if (!organization) {
+      throw new AppError('Organization not found', 404);
+    }
+
+    return {
+      organization,
+      membershipStatus: membership.status,
+      invitationId:
+        membership.status === 'invited' ? membership._id.toString() : null,
+    };
   }
 
   public async checkOrganizationMembership(
@@ -164,10 +176,6 @@ export class OrganizationService {
       currentUserId,
     );
 
-    if (!organizationDetails) {
-      throw new AppError('Organization not found', 404);
-    }
-
     const created = await this.organizationMemberships.create({
       organizationId,
       userId: userDetails._id,
@@ -176,9 +184,10 @@ export class OrganizationService {
     });
 
     await this.emailService.sendOrganizationInvite(
-      organizationDetails.name,
+      organizationDetails.organization.name,
       invitedUserRole,
       userDetails.email,
+      created._id.toString(),
     );
 
     return created;

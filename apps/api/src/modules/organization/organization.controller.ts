@@ -87,13 +87,15 @@ export class OrganizationController {
       throw new AppError('Organization ID is not in correct format', 400);
     }
 
-    const organization = await this.org.getById(
+    const result = await this.org.getById(
       new Types.ObjectId(id.toString()),
       new Types.ObjectId(user?.id),
     );
 
     return res.status(200).json({
-      organization,
+      organization: result.organization,
+      membershipStatus: result.membershipStatus,
+      invitationId: result.invitationId,
       message: 'Successfully retrieved organization',
     });
   }

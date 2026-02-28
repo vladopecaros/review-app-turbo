@@ -101,7 +101,10 @@ export const openApiSpec = {
           },
         ],
         responses: {
-          '200': { description: 'Organization fetched successfully' },
+          '200': {
+            description:
+              'Organization fetched successfully (includes membershipStatus and invitationId for invited members)',
+          },
           '400': { description: 'Invalid organization id format' },
           '403': { description: 'Unauthorized to access organization' },
         },

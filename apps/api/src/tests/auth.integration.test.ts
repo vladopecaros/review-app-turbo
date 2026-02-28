@@ -114,6 +114,12 @@ async function acceptInvitation(accessToken: string, invitationId: string) {
     .set('Authorization', `Bearer ${accessToken}`);
 }
 
+async function declineInvitation(accessToken: string, invitationId: string) {
+  return request
+    .put(`/organization-memberships/invitations/${invitationId}/decline`)
+    .set('Authorization', `Bearer ${accessToken}`);
+}
+
 async function createProduct(
   accessToken: string,
   organizationId: string,
@@ -427,7 +433,69 @@ test('organization invite accepts invited user email', async () => {
   );
 
   assert.equal(inviteRes.status, 200);
-  assert.ok(inviteRes.body.invitation?._id);
+  const invitationId = inviteRes.body.invitation?._id?.toString();
+  assert.ok(invitationId);
+
+  const inviteMailArgs = mailerStub.getCall(mailerStub.callCount - 1)
+    .args[0] as {
+    html: string;
+  };
+  assert.match(
+    inviteMailArgs.html,
+    new RegExp(`/app/invitations/${invitationId}`),
+  );
+});
+
+test('invited users can open organization detail and decline invitation', async () => {
+  const ownerEmail = 'owner-invited-org-detail@example.com';
+  const inviteeEmail = 'invitee-org-detail@example.com';
+
+  const ownerToken = await registerAndExtractToken(ownerEmail);
+  await verifyEmail(ownerToken.token);
+  const ownerLogin = await loginUser(ownerEmail);
+  const ownerAccessToken = ownerLogin.body.accessToken as string;
+
+  const orgRes = await createOrganization(
+    ownerAccessToken,
+    'org-invited-org-detail',
+  );
+  assert.equal(orgRes.status, 200);
+  const organizationId = orgRes.body.organization?._id?.toString();
+  assert.ok(organizationId);
+
+  const inviteeToken = await registerAndExtractToken(inviteeEmail);
+  await verifyEmail(inviteeToken.token);
+  const inviteeLogin = await loginUser(inviteeEmail);
+  const inviteeAccessToken = inviteeLogin.body.accessToken as string;
+
+  const inviteRes = await inviteUserByEmail(
+    ownerAccessToken,
+    organizationId!,
+    inviteeEmail,
+    'member',
+  );
+
+  assert.equal(inviteRes.status, 200);
+  const invitationId = inviteRes.body.invitation?._id?.toString();
+  assert.ok(invitationId);
+
+  const invitedOrgDetailRes = await request
+    .get(`/organization/${organizationId}`)
+    .set('Authorization', `Bearer ${inviteeAccessToken}`);
+
+  assert.equal(invitedOrgDetailRes.status, 200);
+  assert.equal(invitedOrgDetailRes.body.membershipStatus, 'invited');
+  assert.equal(invitedOrgDetailRes.body.invitationId, invitationId);
+
+  const declineRes = await declineInvitation(inviteeAccessToken, invitationId!);
+  assert.equal(declineRes.status, 200);
+
+  const orgListRes = await request
+    .get('/organization')
+    .set('Authorization', `Bearer ${inviteeAccessToken}`);
+
+  assert.equal(orgListRes.status, 200);
+  assert.deepEqual(orgListRes.body.organizations, []);
 });
 
 test('organization member cannot create or update products', async () => {
