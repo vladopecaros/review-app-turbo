@@ -69,6 +69,7 @@ export class ReviewService {
     scope: ReviewScope,
     productId: Types.ObjectId | undefined,
     status: ReviewStatus | undefined,
+    rating: number | undefined,
     page: number,
     limit: number,
     userId: Types.ObjectId,
@@ -91,7 +92,34 @@ export class ReviewService {
       filter.status = status;
     }
 
+    if (rating !== undefined) {
+      filter.rating = rating;
+    }
+
     return this.reviews.listForOrg(filter, page, limit);
+  }
+
+  async getOne(
+    organizationId: Types.ObjectId,
+    reviewId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ) {
+    const hasAccess = await this.orgService.checkOrganizationMembership(
+      organizationId,
+      userId,
+    );
+
+    if (!hasAccess) {
+      throw new AppError('Unauthorized', 403);
+    }
+
+    const review = await this.reviews.findOne(organizationId, reviewId);
+
+    if (!review) {
+      throw new AppError('Review not found', 404);
+    }
+
+    return review;
   }
 
   async updateStatus(

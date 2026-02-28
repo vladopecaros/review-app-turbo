@@ -53,6 +53,13 @@ export class ReviewController {
       return res.status(400).json({ message: 'Invalid status value' });
     }
 
+    const rating = this.parseRating(req.query.rating);
+    if (rating === null) {
+      return res
+        .status(400)
+        .json({ message: 'Rating must be an integer between 1 and 5' });
+    }
+
     const { page, limit, error } = this.parsePagination(
       req.query.page,
       req.query.limit,
@@ -67,6 +74,7 @@ export class ReviewController {
       scope,
       productId,
       status,
+      rating,
       page,
       limit,
       new Types.ObjectId(user.id),
@@ -77,6 +85,43 @@ export class ReviewController {
       pagination: result.pagination,
       message: 'Reviews fetched successfully',
     });
+  }
+
+  async getOne(req: Request, res: Response) {
+    const { user } = req;
+    const { organizationId, reviewId } = req.params;
+
+    if (!user?.id) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+
+    if (!organizationId || !reviewId) {
+      return res
+        .status(400)
+        .json({ message: 'Organization ID and review ID are required' });
+    }
+
+    if (!Types.ObjectId.isValid(organizationId.toString())) {
+      return res
+        .status(400)
+        .json({ message: 'Organization ID is not in correct format' });
+    }
+
+    if (!Types.ObjectId.isValid(reviewId.toString())) {
+      return res
+        .status(400)
+        .json({ message: 'Review ID is not in correct format' });
+    }
+
+    const review = await this.reviews.getOne(
+      new Types.ObjectId(organizationId.toString()),
+      new Types.ObjectId(reviewId.toString()),
+      new Types.ObjectId(user.id),
+    );
+
+    return res
+      .status(200)
+      .json({ review, message: 'Review fetched successfully' });
   }
 
   async updateStatus(req: Request, res: Response) {
@@ -124,6 +169,13 @@ export class ReviewController {
       review: updated,
       message: 'Review status updated successfully',
     });
+  }
+
+  private parseRating(value: unknown): number | undefined | null {
+    if (value === undefined || value === null || value === '') return undefined;
+    const n = Number(value);
+    if (!Number.isInteger(n) || n < 1 || n > 5) return null;
+    return n;
   }
 
   private parseScope(value: unknown, productId?: string): ReviewScope | null {

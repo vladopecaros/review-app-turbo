@@ -52,6 +52,15 @@ export class ReviewRepository {
     };
   }
 
+  async findOne(
+    organizationId: Types.ObjectId,
+    reviewId: Types.ObjectId,
+  ): Promise<Review | null> {
+    const doc = await ReviewModel.findOne({ _id: reviewId, organizationId });
+    if (!doc) return null;
+    return this.toDomain(doc);
+  }
+
   async updateStatus(
     organizationId: Types.ObjectId,
     reviewId: Types.ObjectId,

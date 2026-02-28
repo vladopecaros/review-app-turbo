@@ -39,6 +39,26 @@ export interface Invitation {
   status: 'invited' | 'active';
 }
 
+export interface Review {
+  _id: string;
+  productId?: string;
+  organizationId: string;
+  rating: number;
+  text: string;
+  reviewerName: string;
+  reviewerEmail: string;
+  status: 'published' | 'pending' | 'rejected';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReviewPagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export interface AuthResponse {
   user: User;
   accessToken: string | null;

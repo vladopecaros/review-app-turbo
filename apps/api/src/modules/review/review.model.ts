@@ -68,6 +68,7 @@ reviewSchema.index(
     partialFilterExpression: { productId: { $exists: true } },
   },
 );
+reviewSchema.index({ organizationId: 1, rating: 1, createdAt: -1 });
 
 export const ReviewModel: Model<ReviewDocument> =
   mongoose.models.Review ||

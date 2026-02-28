@@ -313,12 +313,45 @@ export const openApiSpec = {
             required: false,
             schema: { type: 'integer' },
           },
+          {
+            in: 'query',
+            name: 'rating',
+            required: false,
+            schema: { type: 'integer', minimum: 1, maximum: 5 },
+            description: 'Filter by exact star rating (1–5)',
+          },
         ],
         responses: {
           '200': { description: 'Reviews fetched successfully' },
           '400': { description: 'Invalid parameters' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
+        },
+      },
+    },
+    '/organization/{id}/reviews/{reviewId}': {
+      get: {
+        summary: 'Get a single review (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'id',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'path',
+            name: 'reviewId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Review fetched successfully' },
+          '400': { description: 'Invalid ID format' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'Review not found' },
         },
       },
     },

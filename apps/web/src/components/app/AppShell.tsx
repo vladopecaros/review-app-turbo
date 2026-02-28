@@ -66,6 +66,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             href: `/app/orgs/${orgId}/products`,
             label: t("appShell.products"),
           },
+          {
+            href: `/app/orgs/${orgId}/reviews`,
+            label: t("appShell.reviews"),
+          },
         ]
       : []),
     { href: "/security", label: t("nav.security") },
