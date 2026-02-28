@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 
 import { ApiKeySection } from '@/components/app/ApiKeySection';
 import { InviteUserForm } from '@/components/app/InviteUserForm';
+import { ProductSection } from '@/components/app/ProductSection';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Organization } from '@/types';
 
@@ -25,6 +26,7 @@ export function OrgDetail({ org }: { org: Organization }) {
       </Card>
 
       <ApiKeySection orgId={org._id} />
+      <ProductSection orgId={org._id} />
       <InviteUserForm orgId={org._id} />
     </div>
   );
