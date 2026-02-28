@@ -624,6 +624,38 @@ test('api key can bulk create products for organization', async () => {
   assert.equal(listRes.body.products.length, 2);
 });
 
+test('api key bulk create rejects missing body with validation error', async () => {
+  const ownerEmail = 'owner-products-bulk-missing-body@example.com';
+
+  const ownerToken = await registerAndExtractToken(ownerEmail);
+  await verifyEmail(ownerToken.token);
+  const ownerLogin = await loginUser(ownerEmail);
+  const ownerAccessToken = ownerLogin.body.accessToken as string;
+
+  const orgRes = await createOrganization(
+    ownerAccessToken,
+    'org-product-bulk-missing-body',
+  );
+  assert.equal(orgRes.status, 200);
+  const organizationId = orgRes.body.organization?._id?.toString();
+  assert.ok(organizationId);
+
+  const apiKeyRes = await getOrganizationApiKey(
+    ownerAccessToken,
+    organizationId!,
+  );
+  assert.equal(apiKeyRes.status, 200);
+  const apiKey = apiKeyRes.body.key as string;
+  assert.ok(apiKey);
+
+  const bulkRes = await request
+    .post('/public/products/bulk')
+    .set('x-api-key', apiKey);
+
+  assert.equal(bulkRes.status, 400);
+  assert.equal(bulkRes.body.message, 'Products array is required');
+});
+
 test('api key bulk create returns per-item duplicate errors', async () => {
   const ownerEmail = 'owner-products-bulk-duplicate@example.com';
 

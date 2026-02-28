@@ -150,7 +150,11 @@ export class ProductController {
 
   async createBulkWithApiKey(req: Request, res: Response) {
     const { apiKeyOrganizationId } = req;
-    const { products } = req.body;
+    const body =
+      req.body && typeof req.body === 'object' && !Array.isArray(req.body)
+        ? (req.body as Record<string, unknown>)
+        : null;
+    const products = body?.products;
 
     if (!apiKeyOrganizationId) {
       return res.status(401).json({ message: 'Unauthorized' });
