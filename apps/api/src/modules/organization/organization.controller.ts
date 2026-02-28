@@ -140,9 +140,7 @@ export class OrganizationController {
     const returnedInvitation = await this.org.inviteUser(
       new Types.ObjectId(user.id),
       invitedUserId ? new Types.ObjectId(invitedUserId) : null,
-      invitedUserEmail
-        ? invitedUserEmail.toString().trim().toLowerCase()
-        : null,
+      invitedUserEmail ? invitedUserEmail.toString().trim() : null,
       new Types.ObjectId(organizationId.toString()),
       invitedUserRole as 'admin' | 'member',
     );
