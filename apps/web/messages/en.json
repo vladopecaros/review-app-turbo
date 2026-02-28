@@ -1,0 +1,214 @@
+{
+  "meta": {
+    "title": "Reviewlico",
+    "description": "API-first review management for modern product teams."
+  },
+  "brand": {
+    "name": "Reviewlico",
+    "tagline": "API-first review management"
+  },
+  "nav": {
+    "security": "Security",
+    "login": "Log in",
+    "getStarted": "Get started",
+    "dashboard": "Dashboard"
+  },
+  "hero": {
+    "badge": "API-first review management",
+    "headlineLine1": "Collect and embed",
+    "headlineLine2": "customer reviews.",
+    "sub": "One API. Any platform. Real social proof without a dashboard maze.",
+    "cta": "Start for free",
+    "ctaSecondary": "Read the docs",
+    "snippetTitle": "Example request"
+  },
+  "features": {
+    "title": "Built for product teams that ship",
+    "subtitle": "Security-conscious review pipelines with clean organization boundaries.",
+    "items": [
+      {
+        "title": "API key access",
+        "description": "Generate org-scoped keys once and wire review collection into any app."
+      },
+      {
+        "title": "Multi-organization",
+        "description": "Manage separate brands, products, or clients without mixing data."
+      },
+      {
+        "title": "Invitation flow",
+        "description": "Invite teammates with role-based access and explicit acceptance."
+      },
+      {
+        "title": "Secure auth",
+        "description": "Short-lived bearer tokens plus refresh cookies for safer sessions."
+      },
+      {
+        "title": "Embeddable output",
+        "description": "Deliver review data to web, mobile, and internal tools from one API."
+      },
+      {
+        "title": "Operational clarity",
+        "description": "Minimal UI and focused workflows keep setup time close to zero."
+      }
+    ]
+  },
+  "howItWorks": {
+    "title": "How it works",
+    "subtitle": "Three steps from sign-up to production integration.",
+    "steps": [
+      {
+        "title": "Register",
+        "description": "Create an account and verify your email."
+      },
+      {
+        "title": "Create organization",
+        "description": "Set up a workspace for your product or client."
+      },
+      {
+        "title": "Generate API key",
+        "description": "Copy the key once and integrate your review pipeline."
+      }
+    ]
+  },
+  "cta": {
+    "headline": "Ship trust signals faster",
+    "sub": "Start your first organization and generate an API key in minutes.",
+    "button": "Get started"
+  },
+  "footer": {
+    "copyright": "All rights reserved.",
+    "security": "Security",
+    "login": "Log in"
+  },
+  "security": {
+    "title": "Security",
+    "intro": "Reviewlico is designed around short-lived access tokens, refresh-token cookies, and explicit org-level access controls.",
+    "sections": {
+      "auth": {
+        "title": "Authentication",
+        "body": "Clients authenticate with bearer access tokens. Session renewal uses an httpOnly refresh token cookie so refresh tokens are never exposed to client-side JavaScript."
+      },
+      "apiKey": {
+        "title": "API key handling",
+        "body": "Organization API keys are generated on demand and shown once at creation time. Treat the returned key as a secret and store it in your own vault or environment manager."
+      },
+      "https": {
+        "title": "HTTPS only",
+        "body": "Production deployments are expected to run over HTTPS for all auth and API traffic. Secure cookie attributes should be enabled in production environments."
+      }
+    }
+  },
+  "auth": {
+    "login": {
+      "eyebrow": "Account access",
+      "title": "Welcome back",
+      "subtitle": "Log in to manage organizations, API keys, and invitations.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Log in",
+      "submitting": "Logging in...",
+      "noAccount": "Don't have an account?",
+      "register": "Sign up",
+      "errorUnverified": "Please verify your email before logging in.",
+      "errorInvalid": "Invalid email or password.",
+      "errorDefault": "Unable to log in right now."
+    },
+    "register": {
+      "eyebrow": "Create account",
+      "title": "Create your account",
+      "subtitle": "Start with email verification, then create your first organization.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "hasAccount": "Already have an account?",
+      "login": "Log in",
+      "successMessage": "Check your inbox. We sent you a verification email.",
+      "errorExists": "An account with that email already exists.",
+      "errorDefault": "Unable to create your account right now."
+    },
+    "verifyEmail": {
+      "title": "Email verification",
+      "verifying": "Verifying your email...",
+      "success": "Email verified! You can now log in.",
+      "expired": "Link expired. A new verification email has been sent.",
+      "error": "Something went wrong while verifying your email.",
+      "missingToken": "Missing verification token.",
+      "loginCta": "Go to login"
+    }
+  },
+  "appShell": {
+    "product": "Control Panel",
+    "dashboard": "Organizations",
+    "logout": "Log out",
+    "loggingOut": "Logging out...",
+    "welcome": "Workspace"
+  },
+  "app": {
+    "orgs": {
+      "title": "Organizations",
+      "subtitle": "Manage your workspaces, members, and API keys.",
+      "empty": "You're not part of any organization yet.",
+      "create": "New organization",
+      "createTitle": "Create organization",
+      "nameLabel": "Name",
+      "slugLabel": "Slug",
+      "submitCreate": "Create",
+      "submittingCreate": "Creating...",
+      "view": "Open",
+      "refresh": "Refresh"
+    },
+    "orgDetail": {
+      "title": "Organization",
+      "loading": "Loading organization...",
+      "pending": "You don't currently have access to this organization. This can happen if your invitation is still pending.",
+      "apiKey": {
+        "title": "API Key",
+        "description": "Generate a new API key for this organization.",
+        "generate": "Generate API key",
+        "confirmTitle": "Rotate API key?",
+        "confirmBody": "Generating a key creates a new secret. Continue only if you are ready to store it now.",
+        "confirmAction": "Generate",
+        "warning": "This key will only be shown once. Copy it now.",
+        "copied": "Copied!",
+        "generatedState": "Key generated in this session. Store it securely."
+      },
+      "invite": {
+        "title": "Invite a member",
+        "userIdLabel": "User ID",
+        "roleLabel": "Role",
+        "roleAdmin": "Admin",
+        "roleMember": "Member",
+        "submit": "Send invite",
+        "submitting": "Sending...",
+        "successPrefix": "Invite sent! Share this link:",
+        "copyLink": "Copy invite link",
+        "copied": "Copied!"
+      }
+    },
+    "invitation": {
+      "title": "You've been invited",
+      "subtitle": "Respond to this invitation to continue.",
+      "accept": "Accept",
+      "decline": "Decline",
+      "accepted": "You've joined the organization.",
+      "declined": "Invitation declined.",
+      "working": "Updating invitation...",
+      "backToApp": "Back to app"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Something went wrong. Please try again.",
+    "logout": "Log out",
+    "back": "Back",
+    "cancel": "Cancel",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "retry": "Retry",
+    "id": "ID",
+    "slug": "Slug",
+    "name": "Name",
+    "status": "Status"
+  }
+}
