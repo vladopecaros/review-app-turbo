@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { isAxiosError } from 'axios';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,11 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
       const origin = window.location.origin;
       setInviteLink(`${origin}/app/invitations/${invitationId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('common.error'));
+      if (isAxiosError(err) && err.response?.status === 404) {
+        setError(t('app.orgDetail.invite.userNotFoundError'));
+      } else {
+        setError(err instanceof Error ? err.message : t('common.error'));
+      }
     } finally {
       setIsSubmitting(false);
     }

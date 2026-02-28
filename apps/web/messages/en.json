@@ -183,7 +183,8 @@
         "submitting": "Sending...",
         "successPrefix": "Invite sent! Share this link:",
         "copyLink": "Copy invite link",
-        "copied": "Copied!"
+        "copied": "Copied!",
+        "userNotFoundError": "This user doesn't have a Reviewlico account yet. Ask them to sign up first, then send the invite again."
       }
     },
     "invitation": {
