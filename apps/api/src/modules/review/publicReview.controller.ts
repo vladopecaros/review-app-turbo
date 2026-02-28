@@ -1,16 +1,21 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
+import { ProductRepository } from '../product/product.repository';
 import { ReviewService, ReviewScope } from './review.service';
 import { Review } from './review.types';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export class PublicReviewController {
-  constructor(private readonly reviews: ReviewService) {}
+  constructor(
+    private readonly reviews: ReviewService,
+    private readonly products: ProductRepository,
+  ) {}
 
   async create(req: Request, res: Response) {
     const { apiKeyOrganizationId } = req;
-    const { rating, text, reviewerName, reviewerEmail, productId } = req.body;
+    const { rating, text, reviewerName, reviewerEmail, externalProductId } =
+      req.body;
 
     if (!apiKeyOrganizationId) {
       return res.status(401).json({ message: 'Unauthorized' });
@@ -56,19 +61,21 @@ export class PublicReviewController {
       });
     }
 
-    let parsedProductId: Types.ObjectId | undefined;
-    if (productId !== undefined && productId !== null) {
-      if (!Types.ObjectId.isValid(productId.toString())) {
-        return res.status(400).json({
-          message: 'Product ID is not in correct format',
-        });
-      }
-      parsedProductId = new Types.ObjectId(productId.toString());
+    if (
+      externalProductId !== undefined &&
+      externalProductId !== null &&
+      (typeof externalProductId !== 'string' ||
+        externalProductId.trim().length === 0)
+    ) {
+      return res.status(400).json({
+        message: 'externalProductId must be a non-empty string',
+      });
     }
 
     const created = await this.reviews.createPublicReview(
       {
-        productId: parsedProductId,
+        externalProductId:
+          externalProductId != null ? externalProductId.trim() : undefined,
         rating,
         text: text.trim(),
         reviewerName: reviewerName.trim(),
@@ -90,26 +97,31 @@ export class PublicReviewController {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const productIdValue = req.query.productId as string | undefined;
-    const scope = this.parseScope(req.query.scope, productIdValue);
+    const externalProductIdValue = req.query.externalProductId as
+      | string
+      | undefined;
+    const scope = this.parseScope(req.query.scope, externalProductIdValue);
     if (!scope) {
       return res.status(400).json({ message: 'Invalid scope value' });
     }
 
-    if (productIdValue && scope !== 'product') {
+    if (externalProductIdValue && scope !== 'product') {
       return res.status(400).json({
-        message: 'productId can only be used with scope=product',
+        message: 'externalProductId can only be used with scope=product',
       });
     }
 
     let productId: Types.ObjectId | undefined;
-    if (productIdValue) {
-      if (!Types.ObjectId.isValid(productIdValue.toString())) {
-        return res.status(400).json({
-          message: 'Product ID is not in correct format',
-        });
+    if (externalProductIdValue) {
+      const orgId = new Types.ObjectId(apiKeyOrganizationId);
+      const product = await this.products.findByExternalId(
+        externalProductIdValue,
+        orgId,
+      );
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
       }
-      productId = new Types.ObjectId(productIdValue.toString());
+      productId = product._id;
     }
 
     const { page, limit, error } = this.parsePagination(
@@ -136,9 +148,12 @@ export class PublicReviewController {
     });
   }
 
-  private parseScope(value: unknown, productId?: string): ReviewScope | null {
+  private parseScope(
+    value: unknown,
+    externalProductId?: string,
+  ): ReviewScope | null {
     if (!value) {
-      return productId ? 'product' : 'all';
+      return externalProductId ? 'product' : 'all';
     }
 
     if (value === 'all' || value === 'org' || value === 'product') {

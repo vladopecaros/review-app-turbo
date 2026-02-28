@@ -16,7 +16,7 @@ export class ReviewService {
 
   async createPublicReview(
     input: {
-      productId?: Types.ObjectId;
+      externalProductId?: string;
       rating: number;
       text: string;
       reviewerName: string;
@@ -24,19 +24,22 @@ export class ReviewService {
     },
     organizationId: Types.ObjectId,
   ) {
-    if (input.productId) {
-      const exists = await this.products.existsByIdAndOrganizationId(
-        input.productId,
+    let productId: Types.ObjectId | undefined;
+
+    if (input.externalProductId) {
+      const product = await this.products.findByExternalId(
+        input.externalProductId,
         organizationId,
       );
-      if (!exists) {
+      if (!product) {
         throw new AppError('Product not found', 404);
       }
+      productId = product._id;
     }
 
     return this.reviews.create({
       organizationId,
-      productId: input.productId,
+      productId,
       rating: input.rating,
       text: input.text,
       reviewerName: input.reviewerName,

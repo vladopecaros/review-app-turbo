@@ -65,7 +65,10 @@ const organizationMembershipController = new OrganizationMembershipController(
 );
 const productController = new ProductController(productService);
 const reviewController = new ReviewController(reviewService);
-const publicReviewController = new PublicReviewController(reviewService);
+const publicReviewController = new PublicReviewController(
+  reviewService,
+  productRepository,
+);
 
 const app = express();
 const requireApiKey = createRequireApiKey(organizationRepository);

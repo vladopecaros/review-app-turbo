@@ -197,6 +197,28 @@ export const openApiSpec = {
             schema: { type: 'string' },
           },
         ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['rating', 'text', 'reviewerName', 'reviewerEmail'],
+                properties: {
+                  externalProductId: {
+                    type: 'string',
+                    description:
+                      "Your own product ID (as provided when registering the product). Omit for org-level reviews.",
+                  },
+                  rating: { type: 'integer', minimum: 1, maximum: 5 },
+                  text: { type: 'string', maxLength: 5000 },
+                  reviewerName: { type: 'string' },
+                  reviewerEmail: { type: 'string', format: 'email' },
+                },
+              },
+            },
+          },
+        },
         responses: {
           '200': { description: 'Review submitted successfully' },
           '400': { description: 'Invalid request body' },
@@ -221,8 +243,10 @@ export const openApiSpec = {
           },
           {
             in: 'query',
-            name: 'productId',
+            name: 'externalProductId',
             required: false,
+            description:
+              'Your own product ID. Only valid when scope=product. Filters reviews to a specific product.',
             schema: { type: 'string' },
           },
           {
@@ -242,6 +266,7 @@ export const openApiSpec = {
           '200': { description: 'Reviews fetched successfully' },
           '400': { description: 'Invalid query parameters' },
           '401': { description: 'Unauthorized' },
+          '404': { description: 'Product not found' },
         },
       },
     },
