@@ -53,6 +53,19 @@ After finishing:
 
 ---
 
+## Agent Delegation Rules
+
+You MUST use subagents for the following — never do these inline:
+
+- Reading more than 2 existing files for research → spawn a read-only explore agent
+- Any task with distinct parallel workstreams → spawn one agent per workstream
+- Code review after implementation → spawn a separate review agent with fresh context
+- Checking multiple modules for consistency → spawn parallel agents, one per module
+
+Doing these inline in your main context is not allowed. Delegate first, then act on the results.
+
+---
+
 ## Current Focus
 
 Active phase: **Phase 3 — Reviews & Public API**
