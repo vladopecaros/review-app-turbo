@@ -22,7 +22,10 @@ export function ReviewForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (state.status === 'success') onSuccess?.(state.review);
+    if (state.status === 'success') {
+      const t = setTimeout(() => onSuccess?.(state.review), 2000);
+      return () => clearTimeout(t);
+    }
     if (state.status === 'error') onError?.(state.message);
   }, [state, onSuccess, onError]);
 
@@ -115,12 +118,12 @@ export function ReviewForm({
       </div>
 
       {state.status === 'error' ? (
-        <p className="rc-error-message">{state.message}</p>
+        <p key={state.message} className="rc-error-message">{state.message}</p>
       ) : null}
 
       <button
         type="submit"
-        className="rc-button"
+        className={['rc-button', state.status === 'submitting' ? 'rc-button--loading' : ''].filter(Boolean).join(' ')}
         disabled={state.status === 'submitting'}
       >
         {state.status === 'submitting' ? 'Submitting…' : submitLabel}

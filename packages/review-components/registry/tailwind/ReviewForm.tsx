@@ -5,6 +5,15 @@ import type { ReviewFormProps } from '../../shared/types';
 import { useSubmitReview } from '../../shared/hooks/useSubmitReview';
 import { StarRating } from './StarRating';
 
+const KEYFRAMES = `
+@keyframes rcErrorIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rcShake{0%,100%{transform:translateX(0)}15%{transform:translateX(-6px)}30%{transform:translateX(5px)}45%{transform:translateX(-4px)}60%{transform:translateX(3px)}75%{transform:translateX(-2px)}}
+@keyframes rcSuccessIn{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes rcCheckBounce{0%{transform:scale(0);opacity:0}60%{transform:scale(1.3);opacity:1}100%{transform:scale(1);opacity:1}}
+@keyframes rcSpin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+`;
+
 export function ReviewForm({
   config,
   onSuccess,
@@ -22,7 +31,10 @@ export function ReviewForm({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (state.status === 'success') onSuccess?.(state.review);
+    if (state.status === 'success') {
+      const t = setTimeout(() => onSuccess?.(state.review), 2000);
+      return () => clearTimeout(t);
+    }
     if (state.status === 'error') onError?.(state.message);
   }, [state, onSuccess, onError]);
 
@@ -67,8 +79,17 @@ export function ReviewForm({
   if (state.status === 'success') {
     return (
       <div className={rootClass}>
-        <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <span className="text-3xl leading-none text-green-400">✓</span>
+        <style>{KEYFRAMES}</style>
+        <div
+          className="flex flex-col items-center gap-3 py-8 text-center"
+          style={{ animation: 'rcSuccessIn 0.4s ease-out both' }}
+        >
+          <span
+            className="text-3xl leading-none text-green-400"
+            style={{ animation: 'rcCheckBounce 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.15s both', display: 'inline-block' }}
+          >
+            ✓
+          </span>
           <p className="text-lg font-semibold tracking-tight text-green-300">Thank you!</p>
           <p className="text-sm text-[#8a98ab]">Your review has been submitted.</p>
         </div>
@@ -78,12 +99,17 @@ export function ReviewForm({
 
   return (
     <form className={rootClass} onSubmit={handleSubmit} noValidate>
+      <style>{KEYFRAMES}</style>
       <h3 className="text-lg font-semibold tracking-tight text-[#e8edf5]">{title}</h3>
 
       <div className="flex flex-col gap-1.5">
         <span className={labelClass}>Rating</span>
         <StarRating value={rating} onChange={setRating} />
-        {errors.rating ? <span className={errorClass}>{errors.rating}</span> : null}
+        {errors.rating ? (
+          <span key={errors.rating} className={errorClass} style={{ animation: 'rcErrorIn 0.25s ease-out both' }}>
+            {errors.rating}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -96,7 +122,11 @@ export function ReviewForm({
           placeholder="Share your experience…"
           rows={4}
         />
-        {errors.text ? <span className={errorClass}>{errors.text}</span> : null}
+        {errors.text ? (
+          <span key={errors.text} className={errorClass} style={{ animation: 'rcErrorIn 0.25s ease-out both' }}>
+            {errors.text}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -109,7 +139,11 @@ export function ReviewForm({
           onChange={(e) => setReviewerName(e.target.value)}
           placeholder="Jane Smith"
         />
-        {errors.reviewerName ? <span className={errorClass}>{errors.reviewerName}</span> : null}
+        {errors.reviewerName ? (
+          <span key={errors.reviewerName} className={errorClass} style={{ animation: 'rcErrorIn 0.25s ease-out both' }}>
+            {errors.reviewerName}
+          </span>
+        ) : null}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -122,21 +156,43 @@ export function ReviewForm({
           onChange={(e) => setReviewerEmail(e.target.value)}
           placeholder="jane@example.com"
         />
-        {errors.reviewerEmail ? <span className={errorClass}>{errors.reviewerEmail}</span> : null}
+        {errors.reviewerEmail ? (
+          <span key={errors.reviewerEmail} className={errorClass} style={{ animation: 'rcErrorIn 0.25s ease-out both' }}>
+            {errors.reviewerEmail}
+          </span>
+        ) : null}
       </div>
 
       {state.status === 'error' ? (
-        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+        <p
+          key={state.message}
+          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+          style={{ animation: 'rcShake 0.5s ease-in-out' }}
+        >
           {state.message}
         </p>
       ) : null}
 
       <button
         type="submit"
-        className="self-start inline-flex h-9 items-center rounded-lg border border-blue-500 bg-blue-500 px-3 text-sm font-medium text-white transition-colors hover:border-blue-600 hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:pointer-events-none disabled:opacity-50"
+        className="self-start inline-flex h-9 items-center gap-2 rounded-lg border border-blue-500 bg-blue-500 px-3 text-sm font-medium text-white transition-colors hover:border-blue-600 hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:pointer-events-none disabled:opacity-50"
         disabled={state.status === 'submitting'}
       >
-        {state.status === 'submitting' ? 'Submitting…' : submitLabel}
+        {state.status === 'submitting' ? (
+          <>
+            <svg
+              className="h-3.5 w-3.5 shrink-0"
+              viewBox="0 0 14 14"
+              fill="none"
+              style={{ animation: 'rcSpin 0.8s linear infinite' }}
+              aria-hidden="true"
+            >
+              <circle cx="7" cy="7" r="5.5" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+              <path d="M7 1.5A5.5 5.5 0 0 1 12.5 7" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            Submitting…
+          </>
+        ) : submitLabel}
       </button>
     </form>
   );

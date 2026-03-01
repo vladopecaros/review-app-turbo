@@ -10,10 +10,17 @@ interface StarRatingProps {
 
 export function StarRating({ value, onChange, size = 'md' }: StarRatingProps) {
   const [hovered, setHovered] = useState(0);
+  const [justSelected, setJustSelected] = useState(0);
   const interactive = typeof onChange !== 'undefined';
   const display = hovered > 0 ? hovered : value;
 
   const starsClass = ['rc-stars', size === 'sm' ? 'rc-stars--sm' : ''].filter(Boolean).join(' ');
+
+  function handleClick(star: number) {
+    onChange!(star);
+    setJustSelected(star);
+    setTimeout(() => setJustSelected(0), 400);
+  }
 
   return (
     <span className={starsClass}>
@@ -23,6 +30,7 @@ export function StarRating({ value, onChange, size = 'md' }: StarRatingProps) {
           'rc-star',
           filled ? 'rc-star--filled' : '',
           interactive ? 'rc-star--interactive' : '',
+          interactive && justSelected === star ? 'rc-star--just-selected' : '',
         ]
           .filter(Boolean)
           .join(' ');
@@ -34,7 +42,7 @@ export function StarRating({ value, onChange, size = 'md' }: StarRatingProps) {
               type="button"
               className={starClass}
               aria-label={`Rate ${star} star${star !== 1 ? 's' : ''}`}
-              onClick={() => onChange(star)}
+              onClick={() => handleClick(star)}
               onMouseEnter={() => setHovered(star)}
               onMouseLeave={() => setHovered(0)}
             >
