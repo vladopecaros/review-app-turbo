@@ -24,7 +24,7 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3 w-full max-w-[72rem] mx-auto">
       <div className="flex items-center justify-between gap-3">
         <StarRating value={review.rating} size="sm" />
         <span className="text-xs text-[#8a98ab]">{formatRelative(review.createdAt)}</span>

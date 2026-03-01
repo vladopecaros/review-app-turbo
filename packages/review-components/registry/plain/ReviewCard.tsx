@@ -24,7 +24,7 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <div className="rc-card">
+    <div className="rc-card rc-root">
       <div className="rc-card__header">
         <StarRating value={review.rating} size="sm" />
         <span className="rc-card__date">{formatRelative(review.createdAt)}</span>

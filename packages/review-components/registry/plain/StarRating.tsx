@@ -14,7 +14,7 @@ export function StarRating({ value, onChange, size = 'md' }: StarRatingProps) {
   const interactive = typeof onChange !== 'undefined';
   const display = hovered > 0 ? hovered : value;
 
-  const starsClass = ['rc-stars', size === 'sm' ? 'rc-stars--sm' : ''].filter(Boolean).join(' ');
+  const starsClass = ['rc-stars rc-root', size === 'sm' ? 'rc-stars--sm' : ''].filter(Boolean).join(' ');
 
   function handleClick(star: number) {
     onChange!(star);

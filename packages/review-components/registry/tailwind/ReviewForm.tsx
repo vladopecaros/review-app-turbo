@@ -69,7 +69,7 @@ export function ReviewForm({
   const errorClass = 'text-xs text-red-300';
 
   const rootClass = [
-    'rounded-2xl border border-[#1e2530] p-5 flex flex-col gap-5',
+    'rounded-2xl border border-[#1e2530] p-5 flex flex-col gap-5 w-full max-w-[72rem] mx-auto',
     'bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0)),#0f1318]',
     className,
   ]
