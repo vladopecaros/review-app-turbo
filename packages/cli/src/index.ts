@@ -23,9 +23,19 @@ program
   .command('add <component>')
   .description('Add a component to your project')
   .option('--styles <variant>', 'Styling variant: plain or tailwind')
-  .action(async (component: string, options: { styles?: string }) => {
-    await runAdd(component, options.styles);
-  });
+  .option('--confirm', 'Prompt before overwriting existing files')
+  .option('--skip-existing', 'Skip files that already exist')
+  .action(
+    async (
+      component: string,
+      options: { styles?: string; confirm?: boolean; skipExisting?: boolean },
+    ) => {
+      await runAdd(component, options.styles, {
+        confirm: options.confirm,
+        skipExisting: options.skipExisting,
+      });
+    },
+  );
 
 program
   .command('list')

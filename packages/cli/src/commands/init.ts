@@ -3,6 +3,7 @@ import pc from 'picocolors';
 import { writeConfig, readConfig, CONFIG_FILE } from '../lib/config.js';
 import type { Style } from '../lib/registry.js';
 import type { ReviewlicoConfig } from '../lib/config.js';
+import { detectProject } from '../lib/detect.js';
 
 export async function runInit(cwd: string): Promise<ReviewlicoConfig> {
   const existing = await readConfig(cwd);
@@ -12,6 +13,19 @@ export async function runInit(cwd: string): Promise<ReviewlicoConfig> {
   }
 
   console.log(`\n${pc.bold('reviewlico')} — let's get you set up\n`);
+
+  const detection = await detectProject(cwd);
+  const frameworkLabel =
+    detection.framework === 'next'
+      ? 'Next.js'
+      : detection.framework === 'vite'
+        ? 'Vite'
+        : detection.framework === 'cra'
+          ? 'Create React App'
+          : 'Unknown framework';
+  console.log(
+    pc.dim(`Detected ${frameworkLabel}; Tailwind: ${detection.hasTailwind ? 'yes' : 'no'}`),
+  );
 
   const answers = await prompts(
     [
@@ -30,7 +44,7 @@ export async function runInit(cwd: string): Promise<ReviewlicoConfig> {
           { title: 'Plain CSS (BEM classes, --rc-* tokens)', value: 'plain' },
           { title: 'Tailwind CSS (utility classes)', value: 'tailwind' },
         ],
-        initial: 0,
+        initial: detection.hasTailwind ? 1 : 0,
       },
     ],
     {

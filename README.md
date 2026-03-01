@@ -45,17 +45,28 @@ npm run test
 The `@reviewlico/cli` package lets third-party developers drop reviewlico components directly into their own projects. Components are copied as editable source files — no black-box dependency.
 
 ```bash
-# Add a component (prompts for output path on first run)
+# Add a component (auto-creates reviewlico.config.json on first run)
 npx @reviewlico/cli add ReviewForm
 
 # Tailwind variant
 npx @reviewlico/cli add ReviewList --styles tailwind
+
+# Prompt before overwriting existing files
+npx @reviewlico/cli add ReviewForm --confirm
+
+# Skip files that already exist
+npx @reviewlico/cli add ReviewForm --skip-existing
+
+# Configure output dir + style without adding a component
+npx @reviewlico/cli init
 
 # See all available components
 npx @reviewlico/cli list
 ```
 
 After running, files land in your configured directory (e.g. `src/components/reviews/`). Import them directly from your project — edit them however you like.
+
+On first run, the CLI detects your framework (Next.js/Vite) and whether Tailwind is configured to preselect the default style. `reviewlico add` overwrites existing files by default; use `--confirm` to prompt per file or `--skip-existing` to leave existing files untouched.
 
 ### Configuration via env vars (recommended)
 

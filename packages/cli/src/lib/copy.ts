@@ -14,8 +14,11 @@ const REGISTRY_ROOT = join(dirname(__filename), 'registry');
 
 export interface CopyResult {
   copied: string[];
+  overwritten: string[];
   skipped: string[];
 }
+
+export type OverwritePolicy = 'overwrite' | 'prompt' | 'skip';
 
 function isSafeRegistryPath(file: string): boolean {
   if (isAbsolute(file)) return false;
@@ -27,6 +30,7 @@ export async function copyComponent(
   style: Style,
   outputDir: string,
   cwd: string,
+  overwritePolicy: OverwritePolicy = 'overwrite',
 ): Promise<CopyResult> {
   // Guard: outputDir must stay within the project root (cwd)
   const resolvedOutput = resolve(cwd, outputDir);
@@ -47,6 +51,7 @@ export async function copyComponent(
   }
 
   const copied: string[] = [];
+  const overwritten: string[] = [];
   const skipped: string[] = [];
 
   // Build list of { src, dest } pairs
@@ -77,18 +82,26 @@ export async function copyComponent(
   for (const { src, dest, transformSharedImports } of filePairs) {
     const fileName = relative(resolvedOutput, dest);
 
-    if (existsSync(dest)) {
-      const { overwrite } = await prompts({
-        type: 'confirm',
-        name: 'overwrite',
-        message: `${pc.yellow(fileName)} already exists. Overwrite?`,
-        initial: false,
-      });
-
-      if (!overwrite) {
+    const exists = existsSync(dest);
+    if (exists) {
+      if (overwritePolicy === 'skip') {
         console.log(`  ${pc.dim('skip')}  ${fileName}`);
         skipped.push(fileName);
         continue;
+      }
+      if (overwritePolicy === 'prompt') {
+        const { overwrite } = await prompts({
+          type: 'confirm',
+          name: 'overwrite',
+          message: `${pc.yellow(fileName)} already exists. Overwrite?`,
+          initial: false,
+        });
+
+        if (!overwrite) {
+          console.log(`  ${pc.dim('skip')}  ${fileName}`);
+          skipped.push(fileName);
+          continue;
+        }
       }
     }
 
@@ -100,11 +113,16 @@ export async function copyComponent(
     } else {
       await copyFile(src, dest);
     }
-    console.log(`  ${pc.green('copy')}  ${fileName}`);
-    copied.push(fileName);
+    if (exists) {
+      console.log(`  ${pc.yellow('overwrite')}  ${fileName}`);
+      overwritten.push(fileName);
+    } else {
+      console.log(`  ${pc.green('copy')}  ${fileName}`);
+      copied.push(fileName);
+    }
   }
 
-  return { copied, skipped };
+  return { copied, overwritten, skipped };
 }
 
 export async function registryExists(): Promise<boolean> {
