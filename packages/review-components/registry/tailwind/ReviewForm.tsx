@@ -52,11 +52,15 @@ export function ReviewForm({
   }
 
   const inputClass =
-    'w-full rounded-lg border border-gray-700 bg-transparent px-3 py-2 text-sm text-gray-100 placeholder-gray-500 outline-none focus:border-blue-500 transition-colors';
-  const labelClass = 'text-xs font-medium text-gray-400';
-  const errorClass = 'text-xs text-red-400';
+    'h-10 w-full rounded-lg border border-[#1e2530] bg-[#0f1318] px-3 text-sm text-[#e8edf5] placeholder:text-[#8a98ab] focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 transition-colors';
+  const labelClass = 'text-sm font-medium text-[#e8edf5]';
+  const errorClass = 'text-xs text-red-300';
 
-  const rootClass = ['rounded-xl border border-gray-700 bg-gray-900 p-6 flex flex-col gap-5', className]
+  const rootClass = [
+    'rounded-2xl border border-[#1e2530] p-5 flex flex-col gap-5',
+    'bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0)),#0f1318]',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -64,9 +68,9 @@ export function ReviewForm({
     return (
       <div className={rootClass}>
         <div className="flex flex-col items-center gap-3 py-8 text-center">
-          <span className="text-3xl leading-none">✓</span>
-          <p className="text-lg font-semibold text-green-400">Thank you!</p>
-          <p className="text-sm text-gray-400">Your review has been submitted.</p>
+          <span className="text-3xl leading-none text-green-400">✓</span>
+          <p className="text-lg font-semibold tracking-tight text-green-300">Thank you!</p>
+          <p className="text-sm text-[#8a98ab]">Your review has been submitted.</p>
         </div>
       </div>
     );
@@ -74,7 +78,7 @@ export function ReviewForm({
 
   return (
     <form className={rootClass} onSubmit={handleSubmit} noValidate>
-      <h3 className="text-lg font-semibold text-gray-100">{title}</h3>
+      <h3 className="text-lg font-semibold tracking-tight text-[#e8edf5]">{title}</h3>
 
       <div className="flex flex-col gap-1.5">
         <span className={labelClass}>Rating</span>
@@ -86,7 +90,7 @@ export function ReviewForm({
         <label className={labelClass} htmlFor="rc-text">Review</label>
         <textarea
           id="rc-text"
-          className={`${inputClass} min-h-[7rem] resize-y`}
+          className={`${inputClass} !h-auto min-h-[7rem] resize-y py-2`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Share your experience…"
@@ -122,12 +126,14 @@ export function ReviewForm({
       </div>
 
       {state.status === 'error' ? (
-        <p className="text-sm text-red-400">{state.message}</p>
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+          {state.message}
+        </p>
       ) : null}
 
       <button
         type="submit"
-        className="self-start rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-55"
+        className="self-start inline-flex h-9 items-center rounded-lg border border-blue-500 bg-blue-500 px-3 text-sm font-medium text-white transition-colors hover:border-blue-600 hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 disabled:pointer-events-none disabled:opacity-50"
         disabled={state.status === 'submitting'}
       >
         {state.status === 'submitting' ? 'Submitting…' : submitLabel}

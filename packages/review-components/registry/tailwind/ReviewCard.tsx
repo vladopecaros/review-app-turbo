@@ -24,13 +24,13 @@ interface ReviewCardProps {
 
 export function ReviewCard({ review }: ReviewCardProps) {
   return (
-    <div className="rounded-xl border border-gray-700 bg-white/[0.02] p-4 flex flex-col gap-2">
+    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between gap-3">
         <StarRating value={review.rating} size="sm" />
-        <span className="text-xs text-gray-400">{formatRelative(review.createdAt)}</span>
+        <span className="text-xs text-[#8a98ab]">{formatRelative(review.createdAt)}</span>
       </div>
-      <span className="text-sm font-medium text-gray-100">{review.reviewerName}</span>
-      <p className="text-sm text-gray-200 leading-relaxed">{review.text}</p>
+      <span className="text-sm font-medium text-[#e8edf5]">{review.reviewerName}</span>
+      <p className="text-sm text-[#e8edf5] leading-relaxed">{review.text}</p>
     </div>
   );
 }

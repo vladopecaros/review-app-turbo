@@ -28,16 +28,16 @@ function ReviewListInner({
     }
   }
 
-  const rootClass = ['flex flex-col gap-5', className].filter(Boolean).join(' ');
+  const rootClass = ['flex flex-col gap-5 p-4 sm:p-6 mx-auto max-w-6xl', className].filter(Boolean).join(' ');
 
   return (
     <div className={rootClass}>
       <div className="flex items-center justify-between gap-4">
-        <h3 className="text-xl font-semibold text-gray-100">{title}</h3>
+        <h3 className="text-xl font-semibold tracking-tight text-[#e8edf5]">{title}</h3>
         {showForm && !formVisible ? (
           <button
             type="button"
-            className="rounded-lg border border-gray-700 px-3.5 py-1.5 text-sm text-gray-400 transition-colors hover:border-blue-500 hover:text-gray-100"
+            className="inline-flex h-9 items-center rounded-lg border border-[#1e2530] bg-transparent px-3 text-sm text-[#8a98ab] transition-colors hover:bg-white/5 hover:text-[#e8edf5]"
             onClick={() => setFormVisible(true)}
           >
             Write a review
@@ -54,14 +54,14 @@ function ReviewListInner({
           {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-xl border border-gray-700 bg-gray-800"
+              className="h-24 animate-pulse rounded-xl border border-white/10 bg-white/5"
             />
           ))}
         </div>
       ) : state.status === 'error' ? (
-        <p className="py-8 text-center text-sm text-red-400">{state.message}</p>
+        <p className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-center text-sm text-red-300">{state.message}</p>
       ) : state.status === 'success' && state.data.reviews.length === 0 ? (
-        <p className="py-8 text-center text-sm text-gray-400">No reviews yet. Be the first!</p>
+        <p className="py-8 text-center text-sm text-[#8a98ab]">No reviews yet. Be the first!</p>
       ) : state.status === 'success' ? (
         <div className="flex flex-col gap-3">
           {state.data.reviews.map((review) => (
@@ -74,18 +74,18 @@ function ReviewListInner({
         <div className="flex items-center justify-between gap-4 pt-2">
           <button
             type="button"
-            className="rounded-lg border border-gray-700 px-3.5 py-1.5 text-sm text-gray-400 transition-colors hover:border-blue-500 hover:text-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-9 items-center rounded-lg border border-[#1e2530] bg-transparent px-3 text-sm text-[#8a98ab] transition-colors hover:bg-white/5 hover:text-[#e8edf5] disabled:pointer-events-none disabled:opacity-40"
             onClick={() => setPage((p) => p - 1)}
             disabled={page <= 1 || state.status === 'loading'}
           >
             ← Previous
           </button>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-[#8a98ab]">
             Page {page} of {pagination.totalPages} · {pagination.total} reviews
           </span>
           <button
             type="button"
-            className="rounded-lg border border-gray-700 px-3.5 py-1.5 text-sm text-gray-400 transition-colors hover:border-blue-500 hover:text-gray-100 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex h-9 items-center rounded-lg border border-[#1e2530] bg-transparent px-3 text-sm text-[#8a98ab] transition-colors hover:bg-white/5 hover:text-[#e8edf5] disabled:pointer-events-none disabled:opacity-40"
             onClick={() => setPage((p) => p + 1)}
             disabled={page >= pagination.totalPages || state.status === 'loading'}
           >

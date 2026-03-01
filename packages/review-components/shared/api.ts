@@ -102,7 +102,7 @@ export async function fetchReviews(
     qs.set('scope', 'product');
     qs.set('externalProductId', params.externalProductId);
   } else {
-    qs.set('scope', 'all');
+    qs.set('scope', 'org');
   }
   if (params.page) qs.set('page', String(params.page));
   if (params.limit) qs.set('limit', String(params.limit));
