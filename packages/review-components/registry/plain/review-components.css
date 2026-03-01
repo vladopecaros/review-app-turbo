@@ -1,0 +1,336 @@
+/* reviewlico components — plain CSS variant
+   Import this file once in your app, then use the components freely.
+   Override any --rc-* variable to theme the components. */
+
+.rc-root {
+  /* Color tokens */
+  --rc-bg: #0f1318;
+  --rc-border: #1e2530;
+  --rc-text: #e8edf5;
+  --rc-text-muted: #8a98ab;
+  --rc-accent: #3b82f6;
+  --rc-accent-hover: #2563eb;
+  --rc-success: #22c55e;
+  --rc-error: #ef4444;
+  --rc-star-filled: #f59e0b;
+  --rc-star-empty: #374151;
+
+  /* Typography */
+  --rc-font-family: system-ui, -apple-system, sans-serif;
+
+  /* Shape */
+  --rc-radius: 12px;
+  --rc-radius-sm: 8px;
+
+  box-sizing: border-box;
+  font-family: var(--rc-font-family);
+  color: var(--rc-text);
+}
+
+.rc-root *,
+.rc-root *::before,
+.rc-root *::after {
+  box-sizing: inherit;
+}
+
+/* ─── Form ────────────────────────────────────────────────────────────────── */
+
+.rc-form {
+  background: var(--rc-bg);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rc-form__title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--rc-text);
+  margin: 0;
+}
+
+.rc-form__success {
+  text-align: center;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rc-form__success-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.rc-form__success-heading {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--rc-success);
+  margin: 0;
+}
+
+.rc-form__success-message {
+  font-size: 0.875rem;
+  color: var(--rc-text-muted);
+  margin: 0;
+}
+
+/* ─── Field ───────────────────────────────────────────────────────────────── */
+
+.rc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rc-label {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--rc-text-muted);
+}
+
+.rc-input,
+.rc-textarea {
+  background: transparent;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  color: var(--rc-text);
+  font-size: 0.9375rem;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+.rc-input:focus,
+.rc-textarea:focus {
+  outline: none;
+  border-color: var(--rc-accent);
+}
+
+.rc-textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.rc-field__error {
+  font-size: 0.8125rem;
+  color: var(--rc-error);
+}
+
+/* ─── Stars ───────────────────────────────────────────────────────────────── */
+
+.rc-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.rc-star {
+  background: none;
+  border: none;
+  padding: 0.125rem;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--rc-star-empty);
+  transition: color 0.1s, transform 0.1s;
+}
+
+.rc-star--filled {
+  color: var(--rc-star-filled);
+}
+
+.rc-star--interactive {
+  cursor: pointer;
+}
+
+.rc-star--interactive:hover {
+  transform: scale(1.15);
+}
+
+.rc-stars--sm .rc-star {
+  font-size: 1rem;
+}
+
+/* ─── Button ──────────────────────────────────────────────────────────────── */
+
+.rc-button {
+  background: var(--rc-accent);
+  border: none;
+  border-radius: var(--rc-radius-sm);
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 0.625rem 1.25rem;
+  transition: background 0.15s, opacity 0.15s;
+  align-self: flex-start;
+}
+
+.rc-button:hover:not(:disabled) {
+  background: var(--rc-accent-hover);
+}
+
+.rc-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rc-error-message {
+  font-size: 0.875rem;
+  color: var(--rc-error);
+}
+
+/* ─── List ────────────────────────────────────────────────────────────────── */
+
+.rc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.rc-list__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.rc-list__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--rc-text);
+  margin: 0;
+}
+
+.rc-list__toggle-form {
+  background: transparent;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  color: var(--rc-text-muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.875rem;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.rc-list__toggle-form:hover {
+  border-color: var(--rc-accent);
+  color: var(--rc-text);
+}
+
+.rc-list__empty,
+.rc-list__error {
+  font-size: 0.9375rem;
+  color: var(--rc-text-muted);
+  padding: 2rem 0;
+  text-align: center;
+}
+
+.rc-list__error {
+  color: var(--rc-error);
+}
+
+.rc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* ─── Card ────────────────────────────────────────────────────────────────── */
+
+.rc-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rc-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.rc-card__reviewer {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rc-text);
+}
+
+.rc-card__date {
+  font-size: 0.8125rem;
+  color: var(--rc-text-muted);
+}
+
+.rc-card__text {
+  font-size: 0.9375rem;
+  color: var(--rc-text);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ─── Pagination ──────────────────────────────────────────────────────────── */
+
+.rc-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.5rem;
+}
+
+.rc-pagination__btn {
+  background: transparent;
+  border: 1px solid var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  color: var(--rc-text-muted);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.875rem;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.rc-pagination__btn:hover:not(:disabled) {
+  border-color: var(--rc-accent);
+  color: var(--rc-text);
+}
+
+.rc-pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.rc-pagination__info {
+  font-size: 0.8125rem;
+  color: var(--rc-text-muted);
+}
+
+/* ─── Skeleton ────────────────────────────────────────────────────────────── */
+
+.rc-skeleton {
+  background: var(--rc-border);
+  border-radius: var(--rc-radius-sm);
+  animation: rc-pulse 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes rc-pulse {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.35;
+  }
+}
+
+.rc-skeleton--card {
+  height: 6rem;
+  border-radius: var(--rc-radius);
+}

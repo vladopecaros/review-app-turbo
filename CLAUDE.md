@@ -68,7 +68,7 @@ Doing these inline in your main context is not allowed. Delegate first, then act
 
 ## Current Focus
 
-Active phase: **Phase 3 — Reviews & Public API**
+Active phase: **Phase 5 — Analytics**
 
 Don't scaffold or implement future phases unless explicitly asked.
 
@@ -96,15 +96,20 @@ Don't scaffold or implement future phases unless explicitly asked.
 - `reviewerEmail` and `status` must always be stripped before returning public review responses — enforce this in the service layer, not the controller
 - Review CRUD uses `externalProductId` end-to-end; never expose internal product `_id` in review responses
 - Raw API key is shown exactly once on creation — it is never stored, only the SHA-256 hash and the first 8-char `keyPrefix` are persisted
+- The embeddable components follow a shadcn-style model: `@reviewlico/cli` copies source files into the consumer's project. `packages/review-components` is the source registry and is **not** a runtime dependency for anyone
+- CLI registry path: `packages/cli/dist/index.js` resolves the registry as `../../review-components` (two levels up from `dist/`). If the CLI is ever published independently without the monorepo, the component files must be bundled or embedded at build time
+- `toPublicReview` in `review.service.ts` is the authoritative definition of `PublicReview` — only `_id`, `externalProductId?`, `rating`, `text`, `reviewerName`, `createdAt`. Keep `packages/review-components/shared/types.ts` in sync with this
 
 ---
 
 ## Repository Overview
 
-Turborepo monorepo for a reviews-as-a-service platform. Two apps share an npm workspace:
+Turborepo monorepo for a reviews-as-a-service platform. Two apps and two packages share an npm workspace:
 
 - `apps/api` — Express 5 + TypeScript + MongoDB backend (port 3333)
 - `apps/web` — Next.js 16 + React 19 + TypeScript frontend (port 3000)
+- `packages/review-components` — Component source registry; plain CSS + Tailwind variants of `ReviewForm` and `ReviewList`; NOT published to npm (private)
+- `packages/cli` — `@reviewlico/cli`; published to npm; copies component source into the dev's own project (shadcn model)
 
 **Vision:** Organizations sign up, create API keys, register products, and embed React components on their websites to collect and display customer reviews.
 
@@ -112,18 +117,22 @@ Turborepo monorepo for a reviews-as-a-service platform. Two apps share an npm wo
 
 ## Where to Look
 
-| I need to...                        | Start here                                              |
-|-------------------------------------|---------------------------------------------------------|
-| Add a new API endpoint              | `modules/<feature>/<feature>.routes.ts`                |
-| Change business logic               | `modules/<feature>/<feature>.service.ts`               |
-| Change DB queries                   | `modules/<feature>/<feature>.repository.ts`            |
-| Add a new page                      | `apps/web/src/app/[locale]/app/...`                    |
-| Make an API call from the frontend  | Use the Axios instance at `apps/web/src/lib/api.ts`    |
-| Add or change global state          | `apps/web/src/store/` (Zustand)                        |
-| Add/change JWT auth protection      | `apps/api/src/middlewares/auth.middleware.ts`           |
-| Add/change API key protection       | `apps/api/src/middlewares/apiKey.middleware.ts`         |
-| Add/update OpenAPI docs             | `apps/api/src/docs/openapi.ts`                         |
-| Add a new env var                   | `.env.template` + `apps/api/src/helpers/env/`          |
+| I need to...                              | Start here                                              |
+|-------------------------------------------|---------------------------------------------------------|
+| Add a new API endpoint                    | `modules/<feature>/<feature>.routes.ts`                |
+| Change business logic                     | `modules/<feature>/<feature>.service.ts`               |
+| Change DB queries                         | `modules/<feature>/<feature>.repository.ts`            |
+| Add a new page                            | `apps/web/src/app/[locale]/app/...`                    |
+| Make an API call from the frontend        | Use the Axios instance at `apps/web/src/lib/api.ts`    |
+| Add or change global state                | `apps/web/src/store/` (Zustand)                        |
+| Add/change JWT auth protection            | `apps/api/src/middlewares/auth.middleware.ts`           |
+| Add/change API key protection             | `apps/api/src/middlewares/apiKey.middleware.ts`         |
+| Add/update OpenAPI docs                   | `apps/api/src/docs/openapi.ts`                         |
+| Add a new env var                         | `.env.template` + `apps/api/src/helpers/env/`          |
+| Edit embeddable component source          | `packages/review-components/registry/<plain\|tailwind>/` |
+| Edit shared hooks/types/api client        | `packages/review-components/shared/`                   |
+| Edit CLI commands or copy logic           | `packages/cli/src/`                                    |
+| Add a new embeddable component            | Add to `packages/review-components/registry/`, then register in `packages/cli/src/lib/registry.ts` |
 
 ---
 
@@ -258,6 +267,6 @@ Source: `apps/api/src/docs/openapi.ts`
 
 1. ✅ **API Key System** — generate/revoke keys scoped to an organization
 2. ✅ **Product Management** — products with slugs unique per org
-3. 🔄 **Reviews & Public API** — public (API-key) and private (JWT) review endpoints with pagination ← *current*
-4. ⬜ **Embeddable NPM package** — `@review-app/components` (`ReviewForm`, `ReviewList`) in `packages/review-components/`
-5. ⬜ **Analytics** — rating distributions, trends, sentiment
+3. ✅ **Reviews & Public API** — public (API-key) and private (JWT) review endpoints with pagination
+4. ✅ **Embeddable CLI package** — `@reviewlico/cli` copies `ReviewForm`/`ReviewList` source into dev projects (shadcn model); plain CSS and Tailwind variants; source lives in `packages/review-components/`
+5. 🔄 **Analytics** — rating distributions, trends, sentiment ← *current*
