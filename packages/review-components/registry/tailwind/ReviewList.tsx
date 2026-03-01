@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ReviewListProps } from '../../shared/types';
 import { useReviews } from '../../shared/hooks/useReviews';
 import { ReviewCard } from './ReviewCard';
 import { ReviewForm } from './ReviewForm';
 
-export function ReviewList({
+function ReviewListInner({
   config,
   limit = 10,
   title = 'Customer Reviews',
@@ -16,11 +16,6 @@ export function ReviewList({
   const [page, setPage] = useState(1);
   const [formVisible, setFormVisible] = useState(false);
   const { state, reload } = useReviews(config, page, limit);
-
-  // Reset to page 1 when config changes
-  useEffect(() => {
-    setPage(1);
-  }, [config.apiUrl, config.apiKey, config.externalProductId]);
 
   const pagination = state.status === 'success' ? state.data.pagination : null;
 
@@ -100,4 +95,14 @@ export function ReviewList({
       ) : null}
     </div>
   );
+}
+
+export function ReviewList(props: ReviewListProps) {
+  const { config } = props;
+  const key = [
+    config.apiUrl ?? '',
+    config.apiKey ?? '',
+    config.externalProductId ?? '',
+  ].join('|');
+  return <ReviewListInner key={key} {...props} />;
 }
