@@ -91,7 +91,7 @@ Don't scaffold or implement future phases unless explicitly asked.
 
 - MongoDB transactions only work on replica sets — always handle the fallback path (manual rollback). See org creation service for reference implementation.
 - Zustand auth store has a `hydrated` flag — always check it before reading auth state on the client to avoid SSR mismatches
-- Refresh token is an HTTP-only cookie scoped to path `/auth/refresh` only — not accessible anywhere else, don't expect it in other requests
+- Refresh token is an HTTP-only cookie with `path: '/'` — intentional so it is sent to both `/auth/refresh` (rotation) and `/auth/logout` (revocation). Scoping it to `/auth/refresh` would break logout since the controller reads `req.cookies.refreshToken` to revoke the DB token.
 - next-intl locale prefix is `'never'` — URLs are `/page` not `/en/page`, never add locale prefix manually to links or redirects
 - `reviewerEmail` and `status` must always be stripped before returning public review responses — enforce this in the service layer, not the controller
 - Review CRUD uses `externalProductId` end-to-end; never expose internal product `_id` in review responses
