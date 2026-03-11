@@ -3,6 +3,7 @@ import { DM_Sans, JetBrains_Mono, Syne } from 'next/font/google';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 
+import 'react-datepicker/dist/react-datepicker.css';
 import '@/app/globals.css';
 import { routing } from '@/i18n/routing';
 

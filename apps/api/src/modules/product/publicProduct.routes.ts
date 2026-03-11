@@ -7,7 +7,11 @@ export function createPublicProductRoutes(
 ): Router {
   const router = Router();
 
-  router.post('/bulk', publicProductsLimiter, controller.createBulkWithApiKey.bind(controller));
+  router.post(
+    '/bulk',
+    publicProductsLimiter,
+    controller.createBulkWithApiKey.bind(controller),
+  );
 
   return router;
 }

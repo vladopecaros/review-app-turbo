@@ -321,7 +321,19 @@
       "star": "1 star",
       "backToOrganization": "Back to organization",
       "loading": "Loading analytics...",
-      "pageHint": "Overview of review metrics for this organization."
+      "pageHint": "Overview of review metrics for this organization.",
+      "dateRange": "Date range",
+      "startDate": "From",
+      "endDate": "To",
+      "clearDates": "Clear",
+      "trends": "Review Trends",
+      "trendsNoData": "No trend data for the selected period.",
+      "granularityDay": "Day",
+      "granularityWeek": "Week",
+      "granularityMonth": "Month",
+      "count": "Reviews",
+      "exportCsv": "Export CSV",
+      "exportTruncated": "Export was capped at 10 000 rows."
     },
     "invitation": {
       "title": "You've been invited",
