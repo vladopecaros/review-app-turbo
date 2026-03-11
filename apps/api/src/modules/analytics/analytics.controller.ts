@@ -147,12 +147,12 @@ export class AnalyticsController {
     for (const row of rows) {
       res.write(
         [
-          row.createdAt.toISOString(),
-          row.rating,
-          escape(row.reviewerName),
-          escape(row.text),
-          row.status,
-          row.externalProductId ? escape(row.externalProductId) : '',
+          row?.createdAt?.toISOString() ?? '/',
+          row?.rating ?? '/',
+          escape(row?.reviewerName ?? '/'),
+          escape(row?.text ?? '/'),
+          row?.status ?? '/',
+          row?.externalProductId ? escape(row?.externalProductId) : '',
         ].join(',') + '\r\n',
       );
     }
