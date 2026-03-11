@@ -275,9 +275,16 @@ export default function AnalyticsPage() {
     },
     [trendsWithIndex, trendLabelStep],
   );
-  const formatTrendLabel = useCallback(
-    (value: number | string) => {
-      const index = typeof value === 'number' ? value : Number(value);
+  const formatTrendLabel = useCallback<
+    NonNullable<React.ComponentProps<typeof Tooltip>['labelFormatter']>
+  >(
+    (label) => {
+      const index =
+        typeof label === 'number'
+          ? label
+          : typeof label === 'string'
+            ? Number(label)
+            : Number.NaN;
       if (!Number.isFinite(index)) return '';
       return trendsWithIndex[index]?.period ?? '';
     },
