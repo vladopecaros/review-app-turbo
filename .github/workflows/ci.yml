@@ -22,6 +22,12 @@ jobs:
           node-version: '20.x'
           cache: 'npm'
 
+      - name: Cache mongodb-memory-server binary
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/mongodb-binaries
+          key: mongodb-memory-server-${{ runner.os }}-7
+
       - name: Install dependencies
         run: npm ci
 

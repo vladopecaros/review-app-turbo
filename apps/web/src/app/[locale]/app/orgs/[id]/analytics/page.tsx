@@ -78,11 +78,7 @@ export default function AnalyticsPage() {
       setError(null);
 
       try {
-        const [orgRes, productsRes, summaryRes] = await Promise.all([
-          api.get(`/organization/${orgId}`),
-          api.get(`/organization/${orgId}/products`),
-          api.get(`/organization/${orgId}/analytics/summary`),
-        ]);
+        const orgRes = await api.get(`/organization/${orgId}`);
 
         if (cancelled) return;
 
@@ -91,14 +87,22 @@ export default function AnalyticsPage() {
         const pendingInvitationId = orgRes.data?.invitationId as string | null | undefined;
 
         setOrg(payload);
-        setProducts((productsRes.data?.products ?? productsRes.data ?? []) as Product[]);
-        setSummary(summaryRes.data?.data as AnalyticsSummary);
 
         if (membershipStatus === 'invited' && pendingInvitationId) {
           setInvitationId(pendingInvitationId);
           setState('invited');
           return;
         }
+
+        const [productsRes, summaryRes] = await Promise.all([
+          api.get(`/organization/${orgId}/products`),
+          api.get(`/organization/${orgId}/analytics/summary`),
+        ]);
+
+        if (cancelled) return;
+
+        setProducts((productsRes.data?.products ?? productsRes.data ?? []) as Product[]);
+        setSummary(summaryRes.data?.data as AnalyticsSummary);
 
         setInvitationId(null);
         setState('ready');

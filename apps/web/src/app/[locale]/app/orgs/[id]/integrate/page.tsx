@@ -69,10 +69,7 @@ export default function IntegratePage() {
       setError(null);
 
       try {
-        const [orgRes, productsRes] = await Promise.all([
-          api.get(`/organization/${orgId}`),
-          api.get(`/organization/${orgId}/products`),
-        ]);
+        const orgRes = await api.get(`/organization/${orgId}`);
 
         if (cancelled) return;
 
@@ -88,15 +85,20 @@ export default function IntegratePage() {
           | undefined;
 
         setOrg(payload);
-        setProducts(
-          (productsRes.data?.products ?? productsRes.data ?? []) as Product[],
-        );
 
         if (membershipStatus === "invited" && pendingInvitationId) {
           setInvitationId(pendingInvitationId);
           setState("invited");
           return;
         }
+
+        const productsRes = await api.get(`/organization/${orgId}/products`);
+
+        if (cancelled) return;
+
+        setProducts(
+          (productsRes.data?.products ?? productsRes.data ?? []) as Product[],
+        );
 
         setInvitationId(null);
         setState("ready");
