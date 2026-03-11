@@ -41,7 +41,10 @@ export class ProductController {
 
     if (!user?.id) throw new AppError('Unauthorized', 401);
     if (!organizationId || !externalProductId)
-      throw new AppError('Organization ID and external product id are required', 400);
+      throw new AppError(
+        'Organization ID and external product id are required',
+        400,
+      );
     if (!Types.ObjectId.isValid(organizationId.toString()))
       throw new AppError('Organization ID is not in correct format', 400);
 
@@ -68,11 +71,20 @@ export class ProductController {
     if (!Types.ObjectId.isValid(organizationId.toString()))
       throw new AppError('Organization ID is not in correct format', 400);
     if (!externalProductId || !name || !slug)
-      throw new AppError('External product id, name, and slug are required', 400);
+      throw new AppError(
+        'External product id, name, and slug are required',
+        400,
+      );
     if (name.length < 3)
-      throw new AppError('Product name must be more than 3 characters long', 400);
+      throw new AppError(
+        'Product name must be more than 3 characters long',
+        400,
+      );
     if (slug.length < 3)
-      throw new AppError('Product slug must be more than 3 characters long', 400);
+      throw new AppError(
+        'Product slug must be more than 3 characters long',
+        400,
+      );
     if (active !== undefined && typeof active !== 'boolean')
       throw new AppError('Active must be a boolean value', 400);
 
@@ -180,15 +192,24 @@ export class ProductController {
 
     if (!user?.id) throw new AppError('Unauthorized', 401);
     if (!organizationId || !externalProductId)
-      throw new AppError('Organization ID and external product id are required', 400);
+      throw new AppError(
+        'Organization ID and external product id are required',
+        400,
+      );
     if (!Types.ObjectId.isValid(organizationId.toString()))
       throw new AppError('Organization ID is not in correct format', 400);
     if (!name || !slug)
       throw new AppError('Product name and slug are required', 400);
     if (name.length < 3)
-      throw new AppError('Product name must be more than 3 characters long', 400);
+      throw new AppError(
+        'Product name must be more than 3 characters long',
+        400,
+      );
     if (slug.length < 3)
-      throw new AppError('Product slug must be more than 3 characters long', 400);
+      throw new AppError(
+        'Product slug must be more than 3 characters long',
+        400,
+      );
     if (typeof active !== 'boolean')
       throw new AppError('Active must be a boolean value', 400);
 
@@ -217,7 +238,10 @@ export class ProductController {
 
     if (!user?.id) throw new AppError('Unauthorized', 401);
     if (!organizationId || !externalProductId)
-      throw new AppError('Organization ID and external product id are required', 400);
+      throw new AppError(
+        'Organization ID and external product id are required',
+        400,
+      );
     if (!Types.ObjectId.isValid(organizationId.toString()))
       throw new AppError('Organization ID is not in correct format', 400);
 

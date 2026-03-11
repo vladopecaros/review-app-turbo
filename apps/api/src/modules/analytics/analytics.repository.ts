@@ -1,6 +1,8 @@
 import { Types, PipelineStage } from 'mongoose';
 import { ReviewModel } from '../review/review.model';
 
+export type TrendsGranularity = 'day' | 'week' | 'month';
+
 export interface RatingBucket {
   rating: number;
   count: number;
@@ -12,15 +14,43 @@ export interface AnalyticsSummary {
   ratingDistribution: RatingBucket[];
 }
 
+export interface TrendBucket {
+  period: string;
+  count: number;
+  averageRating: number;
+}
+
+export interface ExportRow {
+  createdAt: Date;
+  rating: number;
+  reviewerName: string;
+  text: string;
+  status: string;
+  externalProductId?: string;
+}
+
 export class AnalyticsRepository {
   async getSummary(
     organizationId: Types.ObjectId,
     productId?: Types.ObjectId,
+    startDate?: Date,
+    endDate?: Date,
   ): Promise<AnalyticsSummary> {
+    const dateFilter =
+      startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate ? { $gte: startDate } : {}),
+              ...(endDate ? { $lte: endDate } : {}),
+            },
+          }
+        : {};
+
     const matchStage: PipelineStage.Match = {
       $match: {
         organizationId,
         ...(productId ? { productId } : {}),
+        ...dateFilter,
       },
     };
 
@@ -69,5 +99,122 @@ export class AnalyticsRepository {
     );
 
     return { totalReviews, averageRating, ratingDistribution };
+  }
+
+  async getTrends(
+    organizationId: Types.ObjectId,
+    granularity: TrendsGranularity,
+    productId?: Types.ObjectId,
+    startDate?: Date,
+    endDate?: Date,
+  ): Promise<TrendBucket[]> {
+    const dateFilter =
+      startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate ? { $gte: startDate } : {}),
+              ...(endDate ? { $lte: endDate } : {}),
+            },
+          }
+        : {};
+
+    const matchStage: PipelineStage.Match = {
+      $match: {
+        organizationId,
+        ...(productId ? { productId } : {}),
+        ...dateFilter,
+      },
+    };
+
+    let dateExpr: unknown;
+    if (granularity === 'week') {
+      dateExpr = {
+        $concat: [
+          { $toString: { $isoWeekYear: '$createdAt' } },
+          '-W',
+          {
+            $cond: {
+              if: { $lt: [{ $isoWeek: '$createdAt' }, 10] },
+              then: {
+                $concat: ['0', { $toString: { $isoWeek: '$createdAt' } }],
+              },
+              else: { $toString: { $isoWeek: '$createdAt' } },
+            },
+          },
+        ],
+      };
+    } else if (granularity === 'month') {
+      dateExpr = { $dateToString: { format: '%Y-%m', date: '$createdAt' } };
+    } else {
+      dateExpr = { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } };
+    }
+
+    const pipeline: PipelineStage[] = [
+      matchStage,
+      {
+        $group: {
+          _id: dateExpr,
+          count: { $sum: 1 },
+          averageRating: { $avg: '$rating' },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0,
+          period: '$_id',
+          count: 1,
+          averageRating: { $round: ['$averageRating', 2] },
+        },
+      },
+    ];
+
+    return ReviewModel.aggregate<TrendBucket>(pipeline);
+  }
+
+  async getExportRows(
+    organizationId: Types.ObjectId,
+    productId?: Types.ObjectId,
+    startDate?: Date,
+    endDate?: Date,
+    limit = 10001,
+  ): Promise<ExportRow[]> {
+    const dateFilter =
+      startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate ? { $gte: startDate } : {}),
+              ...(endDate ? { $lte: endDate } : {}),
+            },
+          }
+        : {};
+
+    const rows = await ReviewModel.find({
+      organizationId,
+      ...(productId ? { productId } : {}),
+      ...dateFilter,
+    })
+      .populate<{ productId: { externalProductId: string } | null }>(
+        'productId',
+        'externalProductId',
+      )
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .select('createdAt rating reviewerName text status productId')
+      .lean();
+
+    return rows.map((r) => ({
+      createdAt: r.createdAt as Date,
+      rating: r.rating,
+      reviewerName: r.reviewerName,
+      text: r.text,
+      status: r.status,
+      externalProductId:
+        r.productId &&
+        typeof r.productId === 'object' &&
+        'externalProductId' in r.productId
+          ? (r.productId as { externalProductId: string }).externalProductId
+          : undefined,
+    }));
   }
 }

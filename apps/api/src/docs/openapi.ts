@@ -604,6 +604,22 @@ export const openApiSpec = {
               'Filter analytics to a specific product by its external ID.',
             schema: { type: 'string' },
           },
+          {
+            in: 'query',
+            name: 'startDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or after this date.',
+            schema: { type: 'string', format: 'date' },
+          },
+          {
+            in: 'query',
+            name: 'endDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or before this date.',
+            schema: { type: 'string', format: 'date' },
+          },
         ],
         responses: {
           '200': {
@@ -640,7 +656,146 @@ export const openApiSpec = {
               },
             },
           },
-          '400': { description: 'Invalid organization id format' },
+          '400': { description: 'Invalid parameter' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'Product not found' },
+        },
+      },
+    },
+    '/organization/{organizationId}/analytics/trends': {
+      get: {
+        summary: 'Get review trends over time for organization (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'query',
+            name: 'granularity',
+            required: false,
+            description: 'Time bucket size. Defaults to "day".',
+            schema: { type: 'string', enum: ['day', 'week', 'month'] },
+          },
+          {
+            in: 'query',
+            name: 'externalProductId',
+            required: false,
+            description: 'Filter to a specific product by its external ID.',
+            schema: { type: 'string' },
+          },
+          {
+            in: 'query',
+            name: 'startDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or after this date.',
+            schema: { type: 'string', format: 'date' },
+          },
+          {
+            in: 'query',
+            name: 'endDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or before this date.',
+            schema: { type: 'string', format: 'date' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Analytics trends fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        properties: {
+                          period: {
+                            type: 'string',
+                            description:
+                              'e.g. "2025-03-15" or "2025-W11" or "2025-03"',
+                          },
+                          count: { type: 'integer' },
+                          averageRating: { type: 'number' },
+                        },
+                      },
+                    },
+                    granularity: {
+                      type: 'string',
+                      enum: ['day', 'week', 'month'],
+                    },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid parameter' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'Product not found' },
+        },
+      },
+    },
+    '/organization/{organizationId}/analytics/export': {
+      get: {
+        summary: 'Export reviews as CSV for organization (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'query',
+            name: 'externalProductId',
+            required: false,
+            description: 'Filter to a specific product by its external ID.',
+            schema: { type: 'string' },
+          },
+          {
+            in: 'query',
+            name: 'startDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or after this date.',
+            schema: { type: 'string', format: 'date' },
+          },
+          {
+            in: 'query',
+            name: 'endDate',
+            required: false,
+            description:
+              'ISO date string — include only reviews on or before this date.',
+            schema: { type: 'string', format: 'date' },
+          },
+        ],
+        responses: {
+          '200': {
+            description:
+              'CSV file download. If capped at 10 000 rows, the response includes X-Export-Truncated: true header.',
+            headers: {
+              'X-Export-Truncated': {
+                description:
+                  'Present and set to "true" when the result was capped at 10 000 rows.',
+                schema: { type: 'string' },
+              },
+            },
+            content: {
+              'text/csv': {
+                schema: { type: 'string', format: 'binary' },
+              },
+            },
+          },
+          '400': { description: 'Invalid parameter' },
           '401': { description: 'Unauthorized' },
           '403': { description: 'Forbidden' },
           '404': { description: 'Product not found' },

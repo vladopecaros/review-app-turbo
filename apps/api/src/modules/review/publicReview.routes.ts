@@ -10,7 +10,11 @@ export function createPublicReviewRoutes(
 ): Router {
   const router = Router();
 
-  router.post('/', publicReviewSubmitLimiter, controller.create.bind(controller));
+  router.post(
+    '/',
+    publicReviewSubmitLimiter,
+    controller.create.bind(controller),
+  );
   router.get('/', publicReviewListLimiter, controller.list.bind(controller));
 
   return router;
