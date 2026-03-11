@@ -253,6 +253,37 @@ export default function AnalyticsPage() {
     await fetchSummaryAndTrends(selectedExtId, '', '', granularity);
   }
 
+  const trendsWithIndex = useMemo(
+    () => trends.map((trend, index) => ({ ...trend, index })),
+    [trends],
+  );
+  const trendTicks = useMemo(
+    () => trendsWithIndex.map((trend) => trend.index),
+    [trendsWithIndex],
+  );
+  const trendLabelStep = useMemo(() => {
+    if (trendsWithIndex.length <= 8) return 1;
+    return Math.ceil(trendsWithIndex.length / 8);
+  }, [trendsWithIndex.length]);
+  const formatTrendTick = useCallback(
+    (value: number | string) => {
+      const index = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(index)) return '';
+      const trend = trendsWithIndex[index];
+      if (!trend) return '';
+      return index % trendLabelStep === 0 ? trend.period : '';
+    },
+    [trendsWithIndex, trendLabelStep],
+  );
+  const formatTrendLabel = useCallback(
+    (value: number | string) => {
+      const index = typeof value === 'number' ? value : Number(value);
+      if (!Number.isFinite(index)) return '';
+      return trendsWithIndex[index]?.period ?? '';
+    },
+    [trendsWithIndex],
+  );
+
   if (state === 'loading') {
     return (
       <div className="space-y-4">
@@ -454,12 +485,20 @@ export default function AnalyticsPage() {
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart
-                data={trends}
+                data={trendsWithIndex}
                 margin={{ top: 4, right: 20, left: 0, bottom: 4 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="rgba(255,255,255,0.06)"
+                  syncWithTicks
+                />
                 <XAxis
-                  dataKey="period"
+                  dataKey="index"
+                  type="number"
+                  domain={[-0.5, Math.max(trendsWithIndex.length - 0.5, 0)]}
+                  ticks={trendTicks}
+                  tickFormatter={formatTrendTick}
                   tick={{ fontSize: 11 }}
                   tickLine={false}
                   axisLine={false}
@@ -475,7 +514,7 @@ export default function AnalyticsPage() {
                   contentStyle={tooltipStyle.contentStyle}
                   labelStyle={tooltipStyle.labelStyle}
                   itemStyle={tooltipStyle.itemStyle}
-                  cursor={{ stroke: 'rgba(255,255,255,0.1)' }}
+                  labelFormatter={formatTrendLabel}
                 />
                 <Line
                   type="monotone"
