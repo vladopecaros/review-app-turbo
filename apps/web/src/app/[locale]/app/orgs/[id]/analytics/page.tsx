@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import DatePicker from 'react-datepicker';
 import {
   BarChart,
   Bar,
@@ -58,6 +59,31 @@ const tooltipStyle = {
   itemStyle: { color: '#e2e8f0' },
   cursor: { fill: 'rgba(255,255,255,0.03)' },
 };
+
+const padDatePart = (value: number) => value.toString().padStart(2, '0');
+
+function parseDateValue(value: string): Date | null {
+  if (!value) return null;
+  const [year, month, day] = value.split('-').map((part) => Number(part));
+  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return null;
+  }
+  return date;
+}
+
+function formatDateValue(date: Date | null): string {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = padDatePart(date.getMonth() + 1);
+  const day = padDatePart(date.getDate());
+  return `${year}-${month}-${day}`;
+}
 
 function buildQueryString(params: Record<string, string | undefined>): string {
   const parts = Object.entries(params)
@@ -257,6 +283,8 @@ export default function AnalyticsPage() {
     () => trends.map((trend, index) => ({ ...trend, index })),
     [trends],
   );
+  const startDateValue = useMemo(() => parseDateValue(startDate), [startDate]);
+  const endDateValue = useMemo(() => parseDateValue(endDate), [endDate]);
   const trendTicks = useMemo(
     () => trendsWithIndex.map((trend) => trend.index),
     [trendsWithIndex],
@@ -389,21 +417,33 @@ export default function AnalyticsPage() {
             {t('app.analytics.dateRange')}
           </label>
           <div className="flex items-center gap-2">
-            <input
-              type="date"
-              value={startDate}
-              max={endDate || undefined}
+            <DatePicker
+              selected={startDateValue}
+              onChange={(date) => void handleDateChange('start', formatDateValue(date))}
+              selectsStart
+              startDate={startDateValue}
+              endDate={endDateValue}
+              maxDate={endDateValue ?? undefined}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="YYYY-MM-DD"
               disabled={filtersLoading}
-              onChange={(e) => void handleDateChange('start', e.target.value)}
+              showPopperArrow={false}
+              popperPlacement="bottom-start"
               className="rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
             />
             <span className="text-xs text-[color:var(--text-muted)]">—</span>
-            <input
-              type="date"
-              value={endDate}
-              min={startDate || undefined}
+            <DatePicker
+              selected={endDateValue}
+              onChange={(date) => void handleDateChange('end', formatDateValue(date))}
+              selectsEnd
+              startDate={startDateValue}
+              endDate={endDateValue}
+              minDate={startDateValue ?? undefined}
+              dateFormat="yyyy-MM-dd"
+              placeholderText="YYYY-MM-DD"
               disabled={filtersLoading}
-              onChange={(e) => void handleDateChange('end', e.target.value)}
+              showPopperArrow={false}
+              popperPlacement="bottom-start"
               className="rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
             />
             {hasDates && (
