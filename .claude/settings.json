@@ -28,5 +28,10 @@
         "command": "echo 'Session ending — remember to update CLAUDE.md Gotchas if you learned anything'"
       }
     ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(ls -la /home/vladimirpersonal/Documents/Projects/review-app-turbo/apps/api/src/modules/*/*.routes.ts)"
+    ]
   }
 }

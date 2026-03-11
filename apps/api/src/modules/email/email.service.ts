@@ -10,7 +10,7 @@ export class EmailService {
 
     await mailer.sendMail({
       to: email,
-      from: `${EnvironmentVariables.PRODUCT_NAME} <no-reply@yourapp.com>`,
+      from: EnvironmentVariables.SMTP_FROM,
       subject: `Verify your email`,
       html: emailVerificationTemplate(verificationUrl),
     });
@@ -24,7 +24,7 @@ export class EmailService {
   ) {
     await mailer.sendMail({
       to: email,
-      from: `${EnvironmentVariables.PRODUCT_NAME} <no-reply@yourapp.com>`,
+      from: EnvironmentVariables.SMTP_FROM,
       subject: `You're invited to an organization`,
       html: organizationInviteTemplate(organizationName, role, invitationId),
     });

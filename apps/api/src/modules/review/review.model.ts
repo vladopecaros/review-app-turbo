@@ -53,7 +53,7 @@ const reviewSchema = new Schema<ReviewDocument>(
       type: String,
       required: true,
       enum: ['published', 'pending', 'rejected'],
-      default: 'published',
+      default: 'pending',
     },
   },
   {

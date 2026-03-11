@@ -1,5 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import { EnvironmentVariables } from './helpers/env/environmentVariables';
 import { UserRepository } from './modules/user/user.repository';
 import { AuthService } from './modules/auth/auth.service';
 import { AuthController } from './modules/auth/auth.controller';
@@ -85,15 +86,22 @@ const requireApiKey = createRequireApiKey(organizationRepository);
 app.use(express.json());
 app.use(cookieParser());
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (
-    origin === 'http://localhost:3000' ||
-    origin === 'http://192.168.8.49:3000'
-  ) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
-    res.setHeader('Vary', 'Origin');
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  const isPublicRoute = req.path.startsWith('/public');
+
+  if (isPublicRoute) {
+    // Public embeddable endpoints: allow any origin — API key is the security boundary
+    res.setHeader('Access-Control-Allow-Origin', '*');
+  } else {
+    // Private dashboard endpoints: restrict to known frontend origin
+    const origin = req.headers.origin;
+    const allowedOrigin = EnvironmentVariables.FRONTEND_URL;
+    if (origin && origin === allowedOrigin) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+    }
   }
+
   res.setHeader(
     'Access-Control-Allow-Methods',
     'GET, POST, PUT, PATCH, DELETE, OPTIONS',
@@ -101,7 +109,7 @@ app.use((req, res, next) => {
   const requestHeaders = req.headers['access-control-request-headers'];
   res.setHeader(
     'Access-Control-Allow-Headers',
-    requestHeaders ?? 'Content-Type, Authorization',
+    requestHeaders ?? 'Content-Type, Authorization, X-API-Key',
   );
   if (req.method === 'OPTIONS') {
     return res.sendStatus(204);

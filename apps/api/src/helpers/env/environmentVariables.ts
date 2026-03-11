@@ -15,6 +15,7 @@ export interface ENVList {
   SMTP_SECURE: string | undefined;
   SMTP_USER: string | undefined;
   SMTP_PASS: string | undefined;
+  SMTP_FROM: string | undefined;
 }
 
 export const EnvironmentVariables: ENVList = {
@@ -32,6 +33,7 @@ export const EnvironmentVariables: ENVList = {
   SMTP_SECURE: env.SMTP_SECURE,
   SMTP_USER: env.SMTP_USER,
   SMTP_PASS: env.SMTP_PASS,
+  SMTP_FROM: env.SMTP_FROM,
 };
 
 export const OptionalEnvironmentVariables = new Set([

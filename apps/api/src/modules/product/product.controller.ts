@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { ProductService } from './product.service';
+import { AppError } from '../../errors/app.error';
 
 type BulkProductInput = {
   externalProductId: string;
@@ -18,23 +19,10 @@ export class ProductController {
     const { user } = req;
     const { organizationId } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!organizationId) {
-      return res.status(400).json({
-        message: 'Organization ID is required',
-      });
-    }
-
-    if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
+    if (!organizationId) throw new AppError('Organization ID is required', 400);
+    if (!Types.ObjectId.isValid(organizationId.toString()))
+      throw new AppError('Organization ID is not in correct format', 400);
 
     const products = await this.products.listForOrganization(
       new Types.ObjectId(organizationId.toString()),
@@ -51,23 +39,11 @@ export class ProductController {
     const { user } = req;
     const { organizationId, externalProductId } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!organizationId || !externalProductId) {
-      return res.status(400).json({
-        message: 'Organization ID and external product id are required',
-      });
-    }
-
-    if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
+    if (!organizationId || !externalProductId)
+      throw new AppError('Organization ID and external product id are required', 400);
+    if (!Types.ObjectId.isValid(organizationId.toString()))
+      throw new AppError('Organization ID is not in correct format', 400);
 
     const product = await this.products.getByExternalId(
       externalProductId.toString(),
@@ -87,47 +63,18 @@ export class ProductController {
     const { externalProductId, name, slug, description, active, metadata } =
       req.body;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!organizationId) {
-      return res.status(400).json({
-        message: 'Organization ID is required',
-      });
-    }
-
-    if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
-    }
-
-    if (!externalProductId || !name || !slug) {
-      return res.status(400).json({
-        message: 'External product id, name, and slug are required',
-      });
-    }
-
-    if (name.length < 3) {
-      return res.status(400).json({
-        message: 'Product name must be more than 3 characters long',
-      });
-    }
-
-    if (slug.length < 3) {
-      return res.status(400).json({
-        message: 'Product slug must be more than 3 characters long',
-      });
-    }
-
-    if (active !== undefined && typeof active !== 'boolean') {
-      return res.status(400).json({
-        message: 'Active must be a boolean value',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
+    if (!organizationId) throw new AppError('Organization ID is required', 400);
+    if (!Types.ObjectId.isValid(organizationId.toString()))
+      throw new AppError('Organization ID is not in correct format', 400);
+    if (!externalProductId || !name || !slug)
+      throw new AppError('External product id, name, and slug are required', 400);
+    if (name.length < 3)
+      throw new AppError('Product name must be more than 3 characters long', 400);
+    if (slug.length < 3)
+      throw new AppError('Product slug must be more than 3 characters long', 400);
+    if (active !== undefined && typeof active !== 'boolean')
+      throw new AppError('Active must be a boolean value', 400);
 
     const product = await this.products.create(
       {
@@ -156,32 +103,19 @@ export class ProductController {
         : null;
     const products = body?.products;
 
-    if (!apiKeyOrganizationId) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-
-    if (!Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({
-        message: 'Products array is required',
-      });
-    }
-
-    if (products.length > 500) {
-      return res.status(400).json({
-        message: 'Products array cannot exceed 500 items',
-      });
-    }
+    if (!apiKeyOrganizationId) throw new AppError('Unauthorized', 401);
+    if (!Array.isArray(products) || products.length === 0)
+      throw new AppError('Products array is required', 400);
+    if (products.length > 500)
+      throw new AppError('Products array cannot exceed 500 items', 400);
 
     const normalizedProducts: BulkProductInput[] = [];
 
     for (let i = 0; i < products.length; i += 1) {
       const entry = products[i];
 
-      if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
-        return res.status(400).json({
-          message: `Invalid product payload at index ${i}`,
-        });
-      }
+      if (typeof entry !== 'object' || entry === null || Array.isArray(entry))
+        throw new AppError(`Invalid product payload at index ${i}`, 400);
 
       const payload = entry as Record<string, unknown>;
       const externalProductId = payload.externalProductId;
@@ -198,34 +132,22 @@ export class ProductController {
         name.trim().length < 3 ||
         typeof slug !== 'string' ||
         slug.trim().length < 3
-      ) {
-        return res.status(400).json({
-          message: `Invalid product payload at index ${i}`,
-        });
-      }
+      )
+        throw new AppError(`Invalid product payload at index ${i}`, 400);
 
-      if (description !== undefined && typeof description !== 'string') {
-        return res.status(400).json({
-          message: `Invalid product payload at index ${i}`,
-        });
-      }
+      if (description !== undefined && typeof description !== 'string')
+        throw new AppError(`Invalid product payload at index ${i}`, 400);
 
-      if (active !== undefined && typeof active !== 'boolean') {
-        return res.status(400).json({
-          message: `Invalid product payload at index ${i}`,
-        });
-      }
+      if (active !== undefined && typeof active !== 'boolean')
+        throw new AppError(`Invalid product payload at index ${i}`, 400);
 
       if (
         metadata !== undefined &&
         (typeof metadata !== 'object' ||
           metadata === null ||
           Array.isArray(metadata))
-      ) {
-        return res.status(400).json({
-          message: `Invalid product payload at index ${i}`,
-        });
-      }
+      )
+        throw new AppError(`Invalid product payload at index ${i}`, 400);
 
       normalizedProducts.push({
         externalProductId: externalProductId.trim(),
@@ -256,47 +178,19 @@ export class ProductController {
     const { organizationId, externalProductId } = req.params;
     const { name, slug, description, active, metadata } = req.body;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!organizationId || !externalProductId) {
-      return res.status(400).json({
-        message: 'Organization ID and external product id are required',
-      });
-    }
-
-    if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
-    }
-
-    if (!name || !slug) {
-      return res.status(400).json({
-        message: 'Product name and slug are required',
-      });
-    }
-
-    if (name.length < 3) {
-      return res.status(400).json({
-        message: 'Product name must be more than 3 characters long',
-      });
-    }
-
-    if (slug.length < 3) {
-      return res.status(400).json({
-        message: 'Product slug must be more than 3 characters long',
-      });
-    }
-
-    if (typeof active !== 'boolean') {
-      return res.status(400).json({
-        message: 'Active must be a boolean value',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
+    if (!organizationId || !externalProductId)
+      throw new AppError('Organization ID and external product id are required', 400);
+    if (!Types.ObjectId.isValid(organizationId.toString()))
+      throw new AppError('Organization ID is not in correct format', 400);
+    if (!name || !slug)
+      throw new AppError('Product name and slug are required', 400);
+    if (name.length < 3)
+      throw new AppError('Product name must be more than 3 characters long', 400);
+    if (slug.length < 3)
+      throw new AppError('Product slug must be more than 3 characters long', 400);
+    if (typeof active !== 'boolean')
+      throw new AppError('Active must be a boolean value', 400);
 
     const result = await this.products.updateByExternalId(
       externalProductId.toString(),
@@ -321,23 +215,11 @@ export class ProductController {
     const { user } = req;
     const { organizationId, externalProductId } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!organizationId || !externalProductId) {
-      return res.status(400).json({
-        message: 'Organization ID and external product id are required',
-      });
-    }
-
-    if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization ID is not in correct format',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
+    if (!organizationId || !externalProductId)
+      throw new AppError('Organization ID and external product id are required', 400);
+    if (!Types.ObjectId.isValid(organizationId.toString()))
+      throw new AppError('Organization ID is not in correct format', 400);
 
     const result = await this.products.deleteByExternalId(
       externalProductId.toString(),
