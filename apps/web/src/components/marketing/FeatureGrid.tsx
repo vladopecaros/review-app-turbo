@@ -1,10 +1,13 @@
 import { useTranslations } from 'next-intl';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
+import { StyleVariantToggle } from './StyleVariantToggle';
 
 type FeatureItem = {
   title: string;
   description: string;
+  code?: string;
 };
 
 export function FeatureGrid() {
@@ -30,10 +33,18 @@ export function FeatureGrid() {
               </div>
               <CardTitle>{item.title}</CardTitle>
               <CardDescription>{item.description}</CardDescription>
+              {item.code ? (
+                <div className="mt-1 inline-flex items-center gap-1.5 rounded-md border border-[color:var(--border)] bg-[color:var(--surface-2)] px-2.5 py-1 transition-colors group-hover:border-blue-400/30 group-hover:bg-blue-500/5">
+                  <span className="font-mono text-xs text-emerald-300">{item.code}</span>
+                </div>
+              ) : null}
             </CardHeader>
-            <CardContent className="pt-0" />
           </Card>
         ))}
+      </div>
+
+      <div className="mt-12 border-t border-white/5 pt-12">
+        <StyleVariantToggle />
       </div>
     </section>
   );
