@@ -5,7 +5,7 @@
   },
   "brand": {
     "name": "Reviewlico",
-    "tagline": "shadcn-style review components"
+    "tagline": "Your reviews. Your brand!"
   },
   "nav": {
     "security": "Security",
@@ -14,7 +14,7 @@
     "dashboard": "Dashboard"
   },
   "hero": {
-    "badge": "shadcn-style review components",
+    "badge": "Your reviews. Your brand!",
     "headlineLine1": "Add reviews to your app",
     "headlineLine2": "in one command.",
     "sub": "Copy production-ready ReviewForm and ReviewList components directly into your project — no black-box SDK, no lock-in.",
@@ -164,7 +164,9 @@
     "welcome": "Workspace",
     "organization": "Organization",
     "products": "Products",
-    "reviews": "Reviews"
+    "reviews": "Reviews",
+    "analytics": "Analytics",
+    "integrate": "Integrate"
   },
   "app": {
     "orgs": {
@@ -285,6 +287,41 @@
       "backToProducts": "Back to products",
       "pageHint": "Moderate and view all reviews for this organization.",
       "productPageHint": "Reviews for this product."
+    },
+    "integrate": {
+      "title": "Integration Guide",
+      "subtitle": "Set up Reviewlico components in your project.",
+      "apiKeyTitle": "API Key",
+      "apiKeyDescription": "Generate an API key from the organization page, then use it as an environment variable in your project.",
+      "apiKeyLink": "Go to organization page",
+      "cliTitle": "CLI Setup",
+      "cliDescription": "Run the following commands in your project directory.",
+      "envTitle": "Environment Variables",
+      "envDescription": "Add these to your project's environment file.",
+      "usageTitle": "Component Usage",
+      "usageDescription": "Import and drop components anywhere in your app.",
+      "productSelectLabel": "Filter snippets by product",
+      "productSelectAll": "No product (org-level)",
+      "frameworkNextjs": "Next.js",
+      "frameworkVite": "Vite",
+      "copy": "Copy",
+      "copied": "Copied!",
+      "backToOrganization": "Back to organization"
+    },
+    "analytics": {
+      "title": "Analytics",
+      "subtitle": "Review metrics for your organization.",
+      "totalReviews": "Total Reviews",
+      "averageRating": "Average Rating",
+      "ratingDistribution": "Rating Distribution",
+      "noData": "No reviews to analyze yet.",
+      "productFilter": "Filter by product",
+      "allProducts": "All products",
+      "stars": "{n} stars",
+      "star": "1 star",
+      "backToOrganization": "Back to organization",
+      "loading": "Loading analytics...",
+      "pageHint": "Overview of review metrics for this organization."
     },
     "invitation": {
       "title": "You've been invited",

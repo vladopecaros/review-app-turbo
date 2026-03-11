@@ -7,6 +7,7 @@ import { isAxiosError } from 'axios';
 import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/modal';
 import api from '@/lib/api';
+import { copyToClipboard } from '@/lib/utils';
 
 export function ApiKeySection({ orgId }: { orgId: string }) {
   const t = useTranslations();
@@ -47,7 +48,7 @@ export function ApiKeySection({ orgId }: { orgId: string }) {
     }
 
     try {
-      await navigator.clipboard.writeText(generatedKey);
+      await copyToClipboard(generatedKey);
       setCopyState('copied');
       window.setTimeout(() => setCopyState('idle'), 1200);
     } catch {
