@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   --bg: #080b0f;
   --surface: #0f1318;
@@ -118,6 +122,10 @@ textarea {
 
 .animate-fade-down {
   animation: fade-down 0.2s ease-in both;
+}
+
+.code-panel-enter {
+  animation: fade-up 0.2s ease-out both;
 }
 
 @keyframes fade-up {

@@ -15,6 +15,9 @@ export function Navbar() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm text-[color:var(--text-muted)] md:flex">
+          <a href="#how-it-works" className="transition hover:text-[color:var(--text)]">
+            How it works
+          </a>
           <Link href="/security" className="transition hover:text-[color:var(--text)]">
             {t('nav.security')}
           </Link>

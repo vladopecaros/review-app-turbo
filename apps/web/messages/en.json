@@ -1,11 +1,11 @@
 {
   "meta": {
     "title": "Reviewlico",
-    "description": "API-first review management for modern product teams."
+    "description": "Drop-in React review components for any app. Install with one CLI command."
   },
   "brand": {
     "name": "Reviewlico",
-    "tagline": "API-first review management"
+    "tagline": "shadcn-style review components"
   },
   "nav": {
     "security": "Security",
@@ -14,66 +14,85 @@
     "dashboard": "Dashboard"
   },
   "hero": {
-    "badge": "API-first review management",
-    "headlineLine1": "Collect and embed",
-    "headlineLine2": "customer reviews.",
-    "sub": "One API. Any platform. Real social proof without a dashboard maze.",
-    "cta": "Start for free",
-    "ctaSecondary": "Read the docs",
-    "snippetTitle": "Example request"
+    "badge": "shadcn-style review components",
+    "headlineLine1": "Add reviews to your app",
+    "headlineLine2": "in one command.",
+    "sub": "Copy production-ready ReviewForm and ReviewList components directly into your project — no black-box SDK, no lock-in.",
+    "cta": "Get started free",
+    "ctaSecondary": "See how it works",
+    "snippetTitle": "Terminal",
+    "snippetTab2": "JSX"
   },
   "features": {
-    "title": "Built for product teams that ship",
-    "subtitle": "Security-conscious review pipelines with clean organization boundaries.",
+    "title": "Everything your review pipeline needs",
+    "subtitle": "From CLI to dashboard, every layer is built for developers who care about what goes into production.",
     "items": [
       {
-        "title": "API key access",
-        "description": "Generate org-scoped keys once and wire review collection into any app."
+        "title": "Copy, don't import",
+        "description": "npx @reviewlico/cli add ReviewForm copies the full component source into your project — you own the file, you control every pixel, forever.",
+        "code": "npx @reviewlico/cli add ReviewForm"
       },
       {
-        "title": "Multi-organization",
-        "description": "Manage separate brands, products, or clients without mixing data."
+        "title": "Plain CSS or Tailwind — your call",
+        "description": "Choose BEM + CSS custom properties for zero-framework overhead, or ship the Tailwind dark-theme preset with animations included.",
+        "code": "--styles tailwind"
       },
       {
-        "title": "Invitation flow",
-        "description": "Invite teammates with role-based access and explicit acceptance."
+        "title": "Auto-configures for Next.js and Vite",
+        "description": "The CLI detects your framework and Tailwind setup on first run, setting the right env var prefixes automatically."
       },
       {
-        "title": "Secure auth",
-        "description": "Short-lived bearer tokens plus refresh cookies for safer sessions."
+        "title": "Multi-product support built in",
+        "description": "Pass externalProductId to any component and reviews are automatically scoped — one account, many products, no data mixing."
       },
       {
-        "title": "Embeddable output",
-        "description": "Deliver review data to web, mobile, and internal tools from one API."
+        "title": "Approve, reject, stay in control",
+        "description": "A private dashboard lets you moderate reviews, manage team members, and generate API keys — without touching the codebase."
       },
       {
-        "title": "Operational clarity",
-        "description": "Minimal UI and focused workflows keep setup time close to zero."
+        "title": "Keys shown once, stored as a hash",
+        "description": "Your raw API key is displayed exactly once on creation; only the SHA-256 hash is ever persisted — no plaintext secrets in a database."
       }
     ]
   },
+  "styleVariants": {
+    "eyebrow": "Two style variants",
+    "badge": "Your files. Your styles.",
+    "plain": {
+      "title": "Plain CSS variant",
+      "description": "Imports a single review-components.css file at your app root. Zero Tailwind dependency. Ideal for projects that already have their own CSS setup."
+    },
+    "tailwind": {
+      "title": "Tailwind variant",
+      "description": "Utility classes throughout — no external stylesheet. Fully tree-shaken. Works out of the box with any Tailwind v3 or v4 project."
+    }
+  },
   "howItWorks": {
-    "title": "How it works",
-    "subtitle": "Three steps from sign-up to production integration.",
+    "title": "From zero to embedded in minutes",
+    "subtitle": "No SDK to pin, no iframe to fight. Just your own components talking to a clean API.",
     "steps": [
       {
-        "title": "Register",
-        "description": "Create an account and verify your email."
+        "title": "Create your account",
+        "description": "Register, verify your email, and create your first organization. Generate an API key — shown once.",
+        "command": "# reviewlico.dev/register"
       },
       {
-        "title": "Create organization",
-        "description": "Set up a workspace for your product or client."
+        "title": "Run CLI init",
+        "description": "The CLI detects your framework and Tailwind setup automatically. Pick a style variant and you're configured.",
+        "command": "npx @reviewlico/cli init"
       },
       {
-        "title": "Generate API key",
-        "description": "Copy the key once and integrate your review pipeline."
+        "title": "Add a component and ship",
+        "description": "Copy ReviewForm or ReviewList into your project, set two env vars, and drop the JSX anywhere in your app.",
+        "command": "npx @reviewlico/cli add ReviewForm"
       }
     ]
   },
   "cta": {
-    "headline": "Ship trust signals faster",
-    "sub": "Start your first organization and generate an API key in minutes.",
-    "button": "Get started"
+    "headline": "One command away from social proof.",
+    "sub": "Create an account, generate an API key, and run the CLI — you'll have a working review form in your project before your next commit.",
+    "button": "Get started free",
+    "command": "npx @reviewlico/cli init"
   },
   "footer": {
     "copyright": "All rights reserved.",
