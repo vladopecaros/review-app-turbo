@@ -5,6 +5,7 @@ import { AnalyticsService } from './analytics.service';
 import { TrendsGranularity } from './analytics.repository';
 
 const VALID_GRANULARITIES: TrendsGranularity[] = ['day', 'week', 'month'];
+const DATE_ONLY_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function toScalar(value: unknown): string | undefined {
   if (value === undefined) return undefined;
@@ -16,14 +17,19 @@ function toScalar(value: unknown): string | undefined {
 function parseOptionalDate(
   value: unknown,
   paramName: string,
+  options?: { endOfDay?: boolean },
 ): Date | undefined {
   const str = toScalar(value);
   if (str === undefined) return undefined;
-  if (str.trim().length === 0)
+  const trimmed = str.trim();
+  if (trimmed.length === 0)
     throw new AppError(`${paramName} must be a non-empty string`, 400);
-  const d = new Date(str.trim());
+  const d = new Date(trimmed);
   if (isNaN(d.getTime()))
     throw new AppError(`${paramName} must be a valid ISO date string`, 400);
+  if (options?.endOfDay && DATE_ONLY_RE.test(trimmed)) {
+    d.setUTCHours(23, 59, 59, 999);
+  }
   return d;
 }
 
@@ -56,7 +62,9 @@ export class AnalyticsController {
       req.query.externalProductId,
     );
     const startDate = parseOptionalDate(req.query.startDate, 'startDate');
-    const endDate = parseOptionalDate(req.query.endDate, 'endDate');
+    const endDate = parseOptionalDate(req.query.endDate, 'endDate', {
+      endOfDay: true,
+    });
 
     const summary = await this.analytics.getSummary(
       new Types.ObjectId(organizationId.toString()),
@@ -96,7 +104,9 @@ export class AnalyticsController {
       req.query.externalProductId,
     );
     const startDate = parseOptionalDate(req.query.startDate, 'startDate');
-    const endDate = parseOptionalDate(req.query.endDate, 'endDate');
+    const endDate = parseOptionalDate(req.query.endDate, 'endDate', {
+      endOfDay: true,
+    });
 
     const trends = await this.analytics.getTrends(
       new Types.ObjectId(organizationId.toString()),
@@ -125,7 +135,9 @@ export class AnalyticsController {
       req.query.externalProductId,
     );
     const startDate = parseOptionalDate(req.query.startDate, 'startDate');
-    const endDate = parseOptionalDate(req.query.endDate, 'endDate');
+    const endDate = parseOptionalDate(req.query.endDate, 'endDate', {
+      endOfDay: true,
+    });
 
     const { rows, truncated } = await this.analytics.getExport(
       new Types.ObjectId(organizationId.toString()),
@@ -139,7 +151,11 @@ export class AnalyticsController {
     res.setHeader('Content-Disposition', 'attachment; filename="reviews.csv"');
     if (truncated) res.setHeader('X-Export-Truncated', 'true');
 
-    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const sanitizeCsvCell = (value: string) => {
+      if (/^\s*[=+\-@]/.test(value)) return `'${value}`;
+      return value;
+    };
+    const escape = (v: string) => `"${sanitizeCsvCell(v).replace(/"/g, '""')}"`;
 
     res.write(
       'createdAt,rating,reviewerName,text,status,externalProductId\r\n',

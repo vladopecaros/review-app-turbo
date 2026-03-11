@@ -245,7 +245,7 @@ export default function AnalyticsPage() {
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
     };
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
     const url = `${baseUrl}/organization/${orgId}/analytics/export${buildQueryString(sharedParams)}`;
 
     // Use a fetch with auth header to get the response, then create blob URL
