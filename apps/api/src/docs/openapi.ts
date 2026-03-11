@@ -388,6 +388,265 @@ export const openApiSpec = {
         },
       },
     },
+    '/organization/{organizationId}/products': {
+      get: {
+        summary: 'List products for organization (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Products fetched successfully' },
+          '400': { description: 'Invalid organization id format' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+        },
+      },
+      post: {
+        summary: 'Create product (JWT required, admin only)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['externalProductId', 'name', 'slug'],
+                properties: {
+                  externalProductId: { type: 'string' },
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  description: { type: 'string' },
+                  active: { type: 'boolean' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': { description: 'Product created successfully' },
+          '400': { description: 'Invalid request body' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden — admin only' },
+          '409': {
+            description:
+              'Product with this externalProductId or slug already exists',
+          },
+        },
+      },
+    },
+    '/organization/{organizationId}/products/{externalProductId}': {
+      get: {
+        summary: 'Get product by external ID (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'path',
+            name: 'externalProductId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Product fetched successfully' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'Product not found' },
+        },
+      },
+      put: {
+        summary: 'Update product by external ID (JWT required, admin only)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'path',
+            name: 'externalProductId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'slug'],
+                properties: {
+                  name: { type: 'string' },
+                  slug: { type: 'string' },
+                  description: { type: 'string' },
+                  active: { type: 'boolean' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Product updated successfully' },
+          '400': { description: 'Invalid request body' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden — admin only' },
+          '404': { description: 'Product not found' },
+          '409': { description: 'Product with this slug already exists' },
+        },
+      },
+      delete: {
+        summary: 'Delete product by external ID (JWT required, admin only)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'path',
+            name: 'externalProductId',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': { description: 'Product deleted successfully' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden — admin only' },
+          '404': { description: 'Product not found' },
+        },
+      },
+    },
+    '/public/products/bulk': {
+      post: {
+        summary: 'Bulk create products (API key required)',
+        parameters: [
+          {
+            in: 'header',
+            name: 'X-API-Key',
+            required: true,
+            schema: { type: 'string' },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['products'],
+                properties: {
+                  products: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['externalProductId', 'name', 'slug'],
+                      properties: {
+                        externalProductId: { type: 'string' },
+                        name: { type: 'string' },
+                        slug: { type: 'string' },
+                        description: { type: 'string' },
+                        active: { type: 'boolean' },
+                        metadata: { type: 'object' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': {
+            description: 'Bulk operation completed with per-item results',
+          },
+          '400': { description: 'Invalid request body' },
+          '401': { description: 'Unauthorized' },
+        },
+      },
+    },
+    '/organization/{organizationId}/analytics/summary': {
+      get: {
+        summary: 'Get analytics summary for organization (JWT required)',
+        parameters: [
+          {
+            in: 'path',
+            name: 'organizationId',
+            required: true,
+            schema: { type: 'string' },
+          },
+          {
+            in: 'query',
+            name: 'externalProductId',
+            required: false,
+            description:
+              'Filter analytics to a specific product by its external ID.',
+            schema: { type: 'string' },
+          },
+        ],
+        responses: {
+          '200': {
+            description: 'Analytics summary fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: {
+                        totalReviews: { type: 'integer' },
+                        averageRating: { type: 'number' },
+                        ratingDistribution: {
+                          type: 'array',
+                          items: {
+                            type: 'object',
+                            properties: {
+                              rating: {
+                                type: 'integer',
+                                minimum: 1,
+                                maximum: 5,
+                              },
+                              count: { type: 'integer' },
+                            },
+                          },
+                        },
+                      },
+                    },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid organization id format' },
+          '401': { description: 'Unauthorized' },
+          '403': { description: 'Forbidden' },
+          '404': { description: 'Product not found' },
+        },
+      },
+    },
     '/organization/{id}/reviews/{reviewId}/status': {
       patch: {
         summary: 'Update review status (JWT required)',

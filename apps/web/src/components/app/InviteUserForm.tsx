@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import api from '@/lib/api';
 import type { InvitedUserRole } from '@/types';
+import { copyToClipboard } from '@/lib/utils';
 
 export function InviteUserForm({ orgId }: { orgId: string }) {
   const t = useTranslations();
@@ -58,7 +59,7 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
     }
 
     try {
-      await navigator.clipboard.writeText(inviteLink);
+      await copyToClipboard(inviteLink);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1200);
     } catch {

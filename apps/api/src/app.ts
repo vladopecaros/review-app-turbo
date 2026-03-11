@@ -28,6 +28,10 @@ import { PublicReviewController } from './modules/review/publicReview.controller
 import { createReviewRoutes } from './modules/review/review.routes';
 import { createPublicReviewRoutes } from './modules/review/publicReview.routes';
 import { createRequireApiKey } from './middlewares/apiKey.middleware';
+import { AnalyticsRepository } from './modules/analytics/analytics.repository';
+import { AnalyticsService } from './modules/analytics/analytics.service';
+import { AnalyticsController } from './modules/analytics/analytics.controller';
+import { createAnalyticsRoutes } from './modules/analytics/analytics.routes';
 
 // DEPENDENCIES FOR CONTROLLERS
 const userRepository = new UserRepository();
@@ -57,6 +61,14 @@ const reviewService = new ReviewService(
   productRepository,
 );
 
+const analyticsRepository = new AnalyticsRepository();
+const analyticsService = new AnalyticsService(
+  analyticsRepository,
+  organizationService,
+  productRepository,
+);
+const analyticsController = new AnalyticsController(analyticsService);
+
 // CONTROLLERS
 const authController = new AuthController(authService);
 const organizationController = new OrganizationController(organizationService);
@@ -74,7 +86,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin === 'http://localhost:3000') {
+  if (
+    origin === 'http://localhost:3000' ||
+    origin === 'http://192.168.8.49:3000'
+  ) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -107,6 +122,10 @@ app.use(
 app.use(
   '/organization/:organizationId/reviews',
   createReviewRoutes(reviewController),
+);
+app.use(
+  '/organization/:organizationId/analytics',
+  createAnalyticsRoutes(analyticsController),
 );
 app.use(
   '/public/products',

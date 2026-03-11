@@ -70,6 +70,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             href: `/app/orgs/${orgId}/reviews`,
             label: t("appShell.reviews"),
           },
+          {
+            href: `/app/orgs/${orgId}/analytics`,
+            label: t("appShell.analytics"),
+          },
+          {
+            href: `/app/orgs/${orgId}/integrate`,
+            label: t("appShell.integrate"),
+          },
         ]
       : []),
     { href: "/security", label: t("nav.security") },
@@ -91,7 +99,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile-only sticky top bar */}
       <div className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/5 bg-[rgba(8,11,15,0.85)] px-4 backdrop-blur-xl md:hidden">
         <Link
-          href="/app"
+          href="/"
           className="font-display text-lg font-semibold tracking-tight"
         >
           Reviewlico
@@ -134,7 +142,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <Link
-                  href="/app"
+                  href="/"
                   className="font-display text-xl font-semibold tracking-tight"
                   onClick={closeDrawer}
                 >
@@ -192,7 +200,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex h-full flex-col p-4">
             <div className="mb-6">
               <Link
-                href="/app"
+                href="/"
                 className="font-display text-xl font-semibold tracking-tight"
               >
                 Reviewlico
