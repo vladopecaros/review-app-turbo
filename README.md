@@ -6,6 +6,8 @@ Monorepo for the Review App backend and frontend using npm workspaces + Turborep
 
 - `apps/api` - Express + TypeScript backend
 - `apps/web` - Next.js frontend
+- `packages/review-components` - Component source registry (plain CSS + Tailwind variants)
+- `packages/cli` - `@reviewlico/cli` — the npx tool that copies components into third-party projects
 
 ## Prerequisites
 
@@ -37,6 +39,66 @@ npm run lint
 npm run typecheck
 npm run test
 ```
+
+## Embeddable Components
+
+The `@reviewlico/cli` package lets third-party developers drop reviewlico components directly into their own projects. Components are copied as editable source files — no black-box dependency.
+
+```bash
+# Add a component (auto-creates reviewlico.config.json on first run)
+npx @reviewlico/cli add ReviewForm
+
+# Tailwind variant
+npx @reviewlico/cli add ReviewList --styles tailwind
+
+# Prompt before overwriting existing files
+npx @reviewlico/cli add ReviewForm --confirm
+
+# Skip files that already exist
+npx @reviewlico/cli add ReviewForm --skip-existing
+
+# Configure output dir + style without adding a component
+npx @reviewlico/cli init
+
+# See all available components
+npx @reviewlico/cli list
+```
+
+After running, files land in your configured directory (e.g. `src/components/reviews/`). Import them directly from your project — edit them however you like.
+
+On first run, the CLI detects your framework (Next.js/Vite) and whether Tailwind is configured to preselect the default style. `reviewlico add` overwrites existing files by default; use `--confirm` to prompt per file or `--skip-existing` to leave existing files untouched.
+
+### Configuration via env vars (recommended)
+
+Set your API URL and key in your project's env file so they never appear hardcoded in JSX:
+
+```bash
+# .env (Vite)
+VITE_REVIEWLICO_API_URL=https://api.example.com
+VITE_REVIEWLICO_API_KEY=rk_live_...
+
+# .env.local (Next.js)
+NEXT_PUBLIC_REVIEWLICO_API_URL=https://api.example.com
+NEXT_PUBLIC_REVIEWLICO_API_KEY=rk_live_...
+```
+
+> **Note:** The API key is a client-side embed key — it will be visible in the browser bundle. This is expected (same model as Stripe publishable keys). Keep your secret keys server-side.
+
+> **Supported frameworks:** Vite and Next.js. CRA is not supported.
+
+With env vars set, `config` props are optional:
+
+```tsx
+import { ReviewForm } from './components/reviews/ReviewForm';
+
+// Reads API URL and key from env automatically
+<ReviewForm config={{ externalProductId: 'prod-001' }} />
+
+// Or pass explicitly (e.g. to override per-component)
+<ReviewForm config={{ apiUrl: 'https://api.example.com', apiKey: 'rk_...', externalProductId: 'prod-001' }} />
+```
+
+Available components: `ReviewForm`, `ReviewList`.
 
 ## Environment
 

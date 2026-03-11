@@ -1,0 +1,17 @@
+{
+  "name": "@reviewlico/review-components",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Component source registry for @reviewlico/cli — not a runtime dependency",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "typescript": "^5"
+  }
+}
