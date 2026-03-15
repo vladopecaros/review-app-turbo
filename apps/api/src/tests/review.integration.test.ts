@@ -114,10 +114,10 @@ test('public: submits review without product (org-level)', async () => {
   });
 
   assert.equal(res.status, 200);
-  assert.ok(res.body.review?._id);
-  assert.equal(res.body.review.rating, 5);
-  assert.equal(res.body.review.reviewerName, 'Alice');
-  assert.equal(res.body.review.reviewerEmail, undefined);
+  assert.ok(res.body.data.review?._id);
+  assert.equal(res.body.data.review.rating, 5);
+  assert.equal(res.body.data.review.reviewerName, 'Alice');
+  assert.equal(res.body.data.review.reviewerEmail, undefined);
 });
 
 test('public: submits review with externalProductId', async () => {
@@ -134,7 +134,7 @@ test('public: submits review with externalProductId', async () => {
   });
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.review.externalProductId, 'prod-123');
+  assert.equal(res.body.data.review.externalProductId, 'prod-123');
 });
 
 test('public: submitting review with unknown externalProductId returns 404', async () => {
@@ -231,7 +231,7 @@ test('private: filters reviews by status', async () => {
     reviewerName: 'Eve',
     reviewerEmail: 'eve@example.com',
   });
-  const reviewId = createRes.body.review._id as string;
+  const reviewId = createRes.body.data.review._id as string;
 
   await request
     .patch(`/organization/${orgId}/reviews/${reviewId}/status`)
@@ -328,16 +328,16 @@ test('private: gets single review by id', async () => {
     reviewerName: 'Grace',
     reviewerEmail: 'grace@example.com',
   });
-  const reviewId = createRes.body.review._id as string;
+  const reviewId = createRes.body.data.review._id as string;
 
   const res = await request
     .get(`/organization/${orgId}/reviews/${reviewId}`)
     .set('Authorization', `Bearer ${token}`);
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.review._id, reviewId);
-  assert.equal(res.body.review.reviewerName, 'Grace');
-  assert.equal(res.body.review.reviewerEmail, 'grace@example.com');
+  assert.equal(res.body.data.review._id, reviewId);
+  assert.equal(res.body.data.review.reviewerName, 'Grace');
+  assert.equal(res.body.data.review.reviewerEmail, 'grace@example.com');
 });
 
 test('private: updates review status to rejected then approved', async () => {
@@ -350,7 +350,7 @@ test('private: updates review status to rejected then approved', async () => {
     reviewerName: 'Hank',
     reviewerEmail: 'hank@example.com',
   });
-  const reviewId = createRes.body.review._id as string;
+  const reviewId = createRes.body.data.review._id as string;
 
   const rejectRes = await request
     .patch(`/organization/${orgId}/reviews/${reviewId}/status`)
@@ -361,7 +361,7 @@ test('private: updates review status to rejected then approved', async () => {
   const checkRes = await request
     .get(`/organization/${orgId}/reviews/${reviewId}`)
     .set('Authorization', `Bearer ${token}`);
-  assert.equal(checkRes.body.review.status, 'rejected');
+  assert.equal(checkRes.body.data.review.status, 'rejected');
 
   const approveRes = await request
     .patch(`/organization/${orgId}/reviews/${reviewId}/status`)
@@ -413,7 +413,7 @@ test('private: member cannot update review status', async () => {
     reviewerName: 'Ivan',
     reviewerEmail: 'ivan@example.com',
   });
-  const reviewId = createRes.body.review._id as string;
+  const reviewId = createRes.body.data.review._id as string;
 
   const patchRes = await request
     .patch(`/organization/${orgId}/reviews/${reviewId}/status`)

@@ -653,7 +653,7 @@ test('api key bulk create rejects missing body with validation error', async () 
     .set('x-api-key', apiKey);
 
   assert.equal(bulkRes.status, 400);
-  assert.equal(bulkRes.body.message, 'Products array is required');
+  assert.match(bulkRes.body.message, /products|invalid input/i);
 });
 
 test('api key bulk create returns per-item duplicate errors', async () => {

@@ -150,8 +150,8 @@ test('analytics: summary calculates totalReviews and averageRating correctly', a
     reviewerName: 'Bob',
     reviewerEmail: 'b@example.com',
   });
-  await publishReview(token, orgId, r1.body.review._id);
-  await publishReview(token, orgId, r2.body.review._id);
+  await publishReview(token, orgId, r1.body.data.review._id);
+  await publishReview(token, orgId, r2.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/summary`)
@@ -172,7 +172,7 @@ test('analytics: summary ratingDistribution always has all 5 buckets', async () 
     reviewerName: 'Alice',
     reviewerEmail: 'a@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/summary`)
@@ -215,8 +215,8 @@ test('analytics: summary filters by externalProductId', async () => {
     reviewerEmail: 'b@example.com',
     externalProductId: 'prod-b',
   });
-  await publishReview(token, orgId, rA.body.review._id);
-  await publishReview(token, orgId, rB.body.review._id);
+  await publishReview(token, orgId, rA.body.data.review._id);
+  await publishReview(token, orgId, rB.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/summary?externalProductId=prod-a`)
@@ -240,7 +240,7 @@ test('analytics: summary filters by startDate and endDate', async () => {
     reviewerName: 'Alice',
     reviewerEmail: 'a@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -289,7 +289,7 @@ test('analytics: trends returns daily buckets', async () => {
     reviewerName: 'Alice',
     reviewerEmail: 'a@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/trends?granularity=day`)
@@ -318,7 +318,7 @@ test('analytics: trends returns weekly buckets', async () => {
     reviewerName: 'Bob',
     reviewerEmail: 'b@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/trends?granularity=week`)
@@ -341,7 +341,7 @@ test('analytics: trends returns monthly buckets', async () => {
     reviewerName: 'Carol',
     reviewerEmail: 'c@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/trends?granularity=month`)
@@ -372,8 +372,8 @@ test('analytics: trends filters by externalProductId', async () => {
     reviewerName: 'Bob',
     reviewerEmail: 'b@example.com',
   });
-  await publishReview(token, orgId, rWithProduct.body.review._id);
-  await publishReview(token, orgId, rWithout.body.review._id);
+  await publishReview(token, orgId, rWithProduct.body.data.review._id);
+  await publishReview(token, orgId, rWithout.body.data.review._id);
 
   const res = await request
     .get(
@@ -399,7 +399,7 @@ test('analytics: trends filters by date range', async () => {
     reviewerName: 'Alice',
     reviewerEmail: 'a@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
   const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
@@ -429,7 +429,7 @@ test('analytics: export returns CSV with correct column headers', async () => {
     reviewerName: 'Alice',
     reviewerEmail: 'a@example.com',
   });
-  await publishReview(token, orgId, r.body.review._id);
+  await publishReview(token, orgId, r.body.data.review._id);
 
   const res = await request
     .get(`/organization/${orgId}/analytics/export`)

@@ -96,8 +96,8 @@ test('creates product successfully', async () => {
     .send(productPayload('prod-001'));
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.product?.externalProductId, 'prod-001');
-  assert.equal(res.body.product?.active, true);
+  assert.equal(res.body.data.product?.externalProductId, 'prod-001');
+  assert.equal(res.body.data.product?.active, true);
 });
 
 test('returns 409 on duplicate externalProductId', async () => {
@@ -169,7 +169,7 @@ test('gets product by externalProductId', async () => {
     .set('Authorization', `Bearer ${token}`);
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.product.externalProductId, 'get-me');
+  assert.equal(res.body.data.product.externalProductId, 'get-me');
 });
 
 test('returns 404 for non-existent externalProductId', async () => {
@@ -259,8 +259,8 @@ test('bulk creates products via API key', async () => {
     });
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.result.createdCount, 3);
-  assert.equal(res.body.result.failedCount, 0);
+  assert.equal(res.body.data.result.createdCount, 3);
+  assert.equal(res.body.data.result.failedCount, 0);
 });
 
 test('member cannot create products', async () => {
