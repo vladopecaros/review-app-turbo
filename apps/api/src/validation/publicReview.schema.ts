@@ -17,6 +17,7 @@ export const createPublicReviewSchema = z.object({
     .email('Reviewer email must be a valid email address'),
   externalProductId: z
     .string()
+    .trim()
     .min(1, 'externalProductId must be a non-empty string')
     .optional()
     .nullable(),
