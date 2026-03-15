@@ -31,9 +31,12 @@ describe('api Axios instance', () => {
   it('adds Authorization header when accessToken is present', async () => {
     const { useAuthStore } = await import('@/store/auth');
     vi.mocked(useAuthStore.getState).mockReturnValue({
+      user: null,
       accessToken: 'test-token-123',
+      hydrated: true,
       setAuth: vi.fn(),
       clearAuth: vi.fn(),
+      setHydrated: vi.fn(),
     });
 
     // Re-import api to apply mocked store state
@@ -55,9 +58,12 @@ describe('api Axios instance', () => {
   it('does not add Authorization header when accessToken is null', async () => {
     const { useAuthStore } = await import('@/store/auth');
     vi.mocked(useAuthStore.getState).mockReturnValue({
+      user: null,
       accessToken: null,
+      hydrated: true,
       setAuth: vi.fn(),
       clearAuth: vi.fn(),
+      setHydrated: vi.fn(),
     });
 
     const { default: api } = await import('./api');
