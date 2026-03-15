@@ -107,7 +107,11 @@ export async function fetchReviews(
   if (params.page) qs.set('page', String(params.page));
   if (params.limit) qs.set('limit', String(params.limit));
 
-  return apiFetch<FetchReviewsResult>(config, `/public/reviews?${qs.toString()}`);
+  const envelope = await apiFetch<{ data: FetchReviewsResult }>(
+    config,
+    `/public/reviews?${qs.toString()}`,
+  );
+  return envelope.data;
 }
 
 export interface CreateReviewPayload {
@@ -122,9 +126,9 @@ export async function createReview(
   config: ReviewComponentConfig,
   payload: CreateReviewPayload,
 ): Promise<PublicReview> {
-  const result = await apiFetch<{ review: PublicReview }>(config, '/public/reviews', {
+  const result = await apiFetch<{ data: { review: PublicReview } }>(config, '/public/reviews', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
-  return result.review;
+  return result.data.review;
 }
