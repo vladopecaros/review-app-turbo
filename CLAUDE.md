@@ -26,6 +26,7 @@ Before writing **any** code:
 
 After finishing:
 
+- Run `cd apps/api && npm run typecheck` and `npm run lint:fix` before every commit — no exceptions
 - If you learned something new about the codebase (a pattern, a gotcha, a convention), add it to the **Gotchas & Lessons Learned** section before closing
 
 ---
