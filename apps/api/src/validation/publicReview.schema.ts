@@ -14,6 +14,7 @@ export const createPublicReviewSchema = z.object({
   reviewerName: z.string().trim().min(1, 'Reviewer name is required'),
   reviewerEmail: z
     .string()
+    .trim()
     .email('Reviewer email must be a valid email address'),
   externalProductId: z
     .string()

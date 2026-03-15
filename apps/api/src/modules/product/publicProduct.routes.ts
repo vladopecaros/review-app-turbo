@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import express, { Router } from 'express';
 import { ProductController } from './product.controller';
 import { publicProductsLimiter } from '../../middlewares/rateLimit.middleware';
 
@@ -9,6 +9,7 @@ export function createPublicProductRoutes(
 
   router.post(
     '/bulk',
+    express.json({ limit: '10mb' }),
     publicProductsLimiter,
     controller.createBulkWithApiKey.bind(controller),
   );
