@@ -17,11 +17,7 @@ export class AuthController {
     const { email, password, firstName, lastName } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        user: null,
-        accessToken: null,
-        message: 'Email and password are required fields!',
-      });
+      throw new AppError('Email and password are required fields!', 400);
     }
 
     const user = await this.auth.register({
@@ -45,10 +41,7 @@ export class AuthController {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
-        user: null,
-        accessToken: null,
-      });
+      throw new AppError('Email and password are required', 400);
     }
 
     const user = await this.auth.login({ email, password });
@@ -65,7 +58,7 @@ export class AuthController {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     const result = await this.auth.refresh(refreshToken);
@@ -82,7 +75,7 @@ export class AuthController {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({ message: 'Unauthorized' });
+      throw new AppError('Unauthorized', 401);
     }
 
     await this.auth.logout(refreshToken);
@@ -93,7 +86,7 @@ export class AuthController {
   async verifyEmail(req: Request, res: Response) {
     const { token } = req.query;
     if (!token || typeof token !== 'string') {
-      return res.status(400).json({ message: 'Invalid token' });
+      throw new AppError('Invalid token', 400);
     }
 
     try {

@@ -1,5 +1,6 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { EnvironmentVariables } from './helpers/env/environmentVariables';
 import { UserRepository } from './modules/user/user.repository';
 import { AuthService } from './modules/auth/auth.service';
@@ -83,7 +84,8 @@ const publicReviewController = new PublicReviewController(reviewService);
 const app = express();
 const requireApiKey = createRequireApiKey(organizationRepository);
 
-app.use(express.json());
+app.use(helmet());
+app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use((req, res, next) => {
   const isPublicRoute = req.path.startsWith('/public');

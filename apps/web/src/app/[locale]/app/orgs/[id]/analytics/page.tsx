@@ -238,39 +238,33 @@ export default function AnalyticsPage() {
     }
   }
 
-  function handleExport() {
+  async function handleExport() {
     if (!orgId) return;
     const sharedParams = {
       ...(selectedExtId ? { externalProductId: selectedExtId } : {}),
       ...(startDate ? { startDate } : {}),
       ...(endDate ? { endDate } : {}),
     };
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL ?? '/api').replace(/\/$/, '');
-    const url = `${baseUrl}/organization/${orgId}/analytics/export${buildQueryString(sharedParams)}`;
 
-    // Use a fetch with auth header to get the response, then create blob URL
-    const token = (() => {
-      try {
-        const stored = localStorage.getItem('reviewlico-auth');
-        if (!stored) return null;
-        const parsed = JSON.parse(stored) as { state?: { accessToken?: string } };
-        return parsed?.state?.accessToken ?? null;
-      } catch {
-        return null;
+    try {
+      const response = await api.get(
+        `/organization/${orgId}/analytics/export${buildQueryString(sharedParams)}`,
+        { responseType: 'blob' },
+      );
+
+      if (response.headers['x-export-truncated'] === 'true') {
+        setExportTruncated(true);
       }
-    })();
 
-    void fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} })
-      .then(async (res) => {
-        if (res.headers.get('X-Export-Truncated') === 'true') setExportTruncated(true);
-        const blob = await res.blob();
-        const anchor = document.createElement('a');
-        anchor.href = URL.createObjectURL(blob);
-        anchor.download = 'reviews.csv';
-        anchor.click();
-        URL.revokeObjectURL(anchor.href);
-      })
-      .catch(() => {/* ignore */});
+      const blob = response.data as Blob;
+      const anchor = document.createElement('a');
+      anchor.href = URL.createObjectURL(blob);
+      anchor.download = 'reviews.csv';
+      anchor.click();
+      URL.revokeObjectURL(anchor.href);
+    } catch {
+      // Export errors are surfaced via the existing error state; no silent swallow
+    }
   }
 
   async function handleClearDates() {

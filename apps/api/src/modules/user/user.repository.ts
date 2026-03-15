@@ -102,7 +102,7 @@ export class UserRepository {
     };
   }
 
-  //eslint-disable-next-line
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose lean() and populate() results lose their Document type; `any` used intentionally to map raw doc fields
   private toDomain(doc: any): User {
     return {
       id: doc._id.toString(),
