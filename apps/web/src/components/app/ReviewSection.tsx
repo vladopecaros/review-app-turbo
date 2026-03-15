@@ -9,25 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import api from '@/lib/api';
+import { parseApiError } from '@/lib/errors';
 import type { Review, ReviewPagination } from '@/types';
-
-function parseError(error: unknown, fallback: string): string {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'response' in error &&
-    typeof error.response === 'object' &&
-    error.response !== null &&
-    'data' in error.response &&
-    typeof error.response.data === 'object' &&
-    error.response.data !== null &&
-    'message' in error.response.data &&
-    typeof error.response.data.message === 'string'
-  ) {
-    return error.response.data.message;
-  }
-  return fallback;
-}
 
 function formatRelative(
   dateStr: string | null | undefined,
@@ -134,7 +117,7 @@ export function ReviewSection({
       setPagination((response.data?.data?.pagination ?? null) as ReviewPagination | null);
     } catch (err) {
       if (loadRequestIdRef.current !== requestId) return;
-      setError(parseError(err, t('common.error')));
+      setError(parseApiError(err, t('common.error')));
     } finally {
       if (loadRequestIdRef.current !== requestId) return;
       setIsLoading(false);
@@ -189,7 +172,7 @@ export function ReviewSection({
       setSuccess(action === 'published' ? t('app.reviews.approveSuccess') : t('app.reviews.rejectSuccess'));
       await loadReviews(currentPage, statusFilter, ratingFilter);
     } catch (err) {
-      setError(parseError(err, t('app.reviews.moderationError')));
+      setError(parseApiError(err, t('app.reviews.moderationError')));
     }
   }
 
@@ -232,6 +215,8 @@ export function ReviewSection({
             <button
               key={String(opt.value)}
               onClick={() => handleStatusChange(opt.value)}
+              aria-label={`Filter by status: ${opt.label}`}
+              aria-pressed={statusFilter === opt.value}
               className={cn(
                 'rounded-full border px-3 py-1 text-xs transition',
                 statusFilter === opt.value
@@ -250,6 +235,8 @@ export function ReviewSection({
             <button
               key={String(opt.value)}
               onClick={() => handleRatingChange(opt.value)}
+              aria-label={opt.value !== undefined ? `Filter by ${opt.value} stars` : 'Show all ratings'}
+              aria-pressed={ratingFilter === opt.value}
               className={cn(
                 'rounded-full border px-3 py-1 text-xs transition',
                 ratingFilter === opt.value

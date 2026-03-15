@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import DatePicker from 'react-datepicker';
@@ -18,15 +17,16 @@ import {
   CartesianGrid,
 } from 'recharts';
 
+import { format, parse, isValid } from 'date-fns';
+
 import { InvitationActions } from '@/components/app/InvitationActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import axios from 'axios';
 import api from '@/lib/api';
-import type { Organization, Product } from '@/types';
+import { useOrgPage } from '@/hooks/useOrgPage';
+import type { Product } from '@/types';
 
-type LoadState = 'loading' | 'ready' | 'invited' | 'error';
 type Granularity = 'day' | 'week' | 'month';
 
 interface AnalyticsSummary {
@@ -61,45 +61,32 @@ const tooltipStyle = {
   cursor: { fill: 'rgba(255,255,255,0.03)' },
 };
 
-const padDatePart = (value: number) => value.toString().padStart(2, '0');
+const DATE_FORMAT = 'yyyy-MM-dd';
 
 function parseDateValue(value: string): Date | null {
   if (!value) return null;
-  const [year, month, day] = value.split('-').map((part) => Number(part));
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) return null;
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-  return date;
+  const parsed = parse(value, DATE_FORMAT, new Date());
+  return isValid(parsed) ? parsed : null;
 }
 
 function formatDateValue(date: Date | null): string {
-  if (!date) return '';
-  const year = date.getFullYear();
-  const month = padDatePart(date.getMonth() + 1);
-  const day = padDatePart(date.getDate());
-  return `${year}-${month}-${day}`;
+  if (!date || !isValid(date)) return '';
+  return format(date, DATE_FORMAT);
 }
 
 function buildQueryString(params: Record<string, string | undefined>): string {
-  const parts = Object.entries(params)
-    .filter(([, v]) => v !== undefined && v !== '')
-    .map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
-    .join('&');
-  return parts ? `?${parts}` : '';
+  const searchParams = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined && v !== '') searchParams.set(k, v);
+  }
+  const str = searchParams.toString();
+  return str ? `?${str}` : '';
 }
 
 export default function AnalyticsPage() {
   const t = useTranslations();
-  const params = useParams<{ id: string }>();
-  const orgId = useMemo(() => (Array.isArray(params.id) ? params.id[0] : params.id), [params.id]);
+  const { orgId, org, state, error, invitationId } = useOrgPage();
 
-  const [org, setOrg] = useState<Organization | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [trends, setTrends] = useState<TrendBucket[]>([]);
@@ -107,11 +94,9 @@ export default function AnalyticsPage() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
   const [granularity, setGranularity] = useState<Granularity>('day');
-  const [state, setState] = useState<LoadState>('loading');
+  const [analyticsReady, setAnalyticsReady] = useState(false);
   const [filtersLoading, setFiltersLoading] = useState(false);
   const [trendsLoading, setTrendsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [invitationId, setInvitationId] = useState<string | null>(null);
   const [exportTruncated, setExportTruncated] = useState(false);
 
   const selectedExtId = useMemo(
@@ -150,30 +135,15 @@ export default function AnalyticsPage() {
     [orgId],
   );
 
+  // Load analytics data once the org membership check passes
   useEffect(() => {
-    if (!orgId) return;
+    if (state !== 'ready' || !orgId) return;
 
     const controller = new AbortController();
 
-    async function load() {
-      setState('loading');
-      setError(null);
-
+    async function loadAnalytics() {
+      setAnalyticsReady(false);
       try {
-        const orgRes = await api.get(`/organization/${orgId}`, { signal: controller.signal });
-
-        const payload = orgRes.data?.data?.organization as Organization;
-        const membershipStatus = orgRes.data?.data?.membershipStatus as 'active' | 'invited' | undefined;
-        const pendingInvitationId = orgRes.data?.data?.invitationId as string | null | undefined;
-
-        setOrg(payload);
-
-        if (membershipStatus === 'invited' && pendingInvitationId) {
-          setInvitationId(pendingInvitationId);
-          setState('invited');
-          return;
-        }
-
         const [productsRes, summaryRes, trendsRes] = await Promise.all([
           api.get(`/organization/${orgId}/products`, { signal: controller.signal }),
           api.get(`/organization/${orgId}/analytics/summary`, { signal: controller.signal }),
@@ -183,21 +153,18 @@ export default function AnalyticsPage() {
         setProducts((productsRes.data?.data?.products ?? []) as Product[]);
         setSummary(summaryRes.data?.data as AnalyticsSummary);
         setTrends((trendsRes.data?.data ?? []) as TrendBucket[]);
-
-        setInvitationId(null);
-        setState('ready');
-      } catch (err) {
-        if (axios.isCancel(err)) return;
-        setState('error');
-        setError(err instanceof Error ? err.message : t('common.error'));
+        setAnalyticsReady(true);
+      } catch {
+        // org-level errors are already handled by useOrgPage; these are analytics fetch errors
+        setAnalyticsReady(true); // allow render even if analytics fetch fails
       }
     }
 
-    void load();
+    void loadAnalytics();
     return () => {
       controller.abort();
     };
-  }, [orgId, t]);
+  }, [state, orgId]);
 
   async function handleProductChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const productId = e.target.value;
@@ -310,7 +277,7 @@ export default function AnalyticsPage() {
     [trendsWithIndex],
   );
 
-  if (state === 'loading') {
+  if (state === 'loading' || (state === 'ready' && !analyticsReady)) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-24 rounded-xl" />
@@ -390,6 +357,7 @@ export default function AnalyticsPage() {
               value={selectedProductId}
               onChange={handleProductChange}
               disabled={filtersLoading}
+              aria-label={t('app.analytics.productFilter')}
               className="rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
             >
               <option value="">{t('app.analytics.allProducts')}</option>
@@ -420,6 +388,7 @@ export default function AnalyticsPage() {
               disabled={filtersLoading}
               showPopperArrow={false}
               popperPlacement="bottom-start"
+              aria-label={t('app.analytics.startDate')}
               className="rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
             />
             <span className="text-xs text-[color:var(--text-muted)]">—</span>
@@ -435,6 +404,7 @@ export default function AnalyticsPage() {
               disabled={filtersLoading}
               showPopperArrow={false}
               popperPlacement="bottom-start"
+              aria-label={t('app.analytics.endDate')}
               className="rounded-lg border border-[color:var(--border)] bg-black/30 px-3 py-2 text-sm text-[color:var(--text)] focus:outline-none focus:ring-1 focus:ring-blue-500/50 disabled:opacity-50"
             />
             {hasDates && (
@@ -503,6 +473,8 @@ export default function AnalyticsPage() {
                 key={g}
                 onClick={() => void handleGranularityChange(g)}
                 disabled={trendsLoading}
+                aria-label={`Group by ${g}`}
+                aria-pressed={granularity === g}
                 className={[
                   'px-3 py-1.5 transition-colors disabled:opacity-50',
                   granularity === g

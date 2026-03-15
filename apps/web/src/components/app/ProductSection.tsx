@@ -9,7 +9,9 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/ui/modal';
 import api from '@/lib/api';
+import { parseApiError } from '@/lib/errors';
 import type { Product } from '@/types';
 
 type ProductFormState = {
@@ -27,25 +29,6 @@ const defaultFormState: ProductFormState = {
   description: '',
   active: true,
 };
-
-function parseError(error: unknown, fallback: string) {
-  if (
-    typeof error === 'object' &&
-    error !== null &&
-    'response' in error &&
-    typeof error.response === 'object' &&
-    error.response !== null &&
-    'data' in error.response &&
-    typeof error.response.data === 'object' &&
-    error.response.data !== null &&
-    'message' in error.response.data &&
-    typeof error.response.data.message === 'string'
-  ) {
-    return error.response.data.message;
-  }
-
-  return fallback;
-}
 
 function toFormState(product: Product): ProductFormState {
   return {
@@ -65,6 +48,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
   const [isCreating, setIsCreating] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState<string | null>(null);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -99,7 +83,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
         return;
       }
 
-      setError(parseError(err, t('common.error')));
+      setError(parseApiError(err, t('common.error')));
     } finally {
       if (loadRequestIdRef.current !== requestId) {
         return;
@@ -137,7 +121,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
       setCreateForm(defaultFormState);
       await loadProducts();
     } catch (err) {
-      setError(parseError(err, t('app.orgDetail.products.createError')));
+      setError(parseApiError(err, t('app.orgDetail.products.createError')));
     } finally {
       setIsCreating(false);
     }
@@ -173,18 +157,20 @@ export function ProductSection({ orgId }: { orgId: string }) {
       cancelEdit();
       await loadProducts();
     } catch (err) {
-      setError(parseError(err, t('app.orgDetail.products.updateError')));
+      setError(parseApiError(err, t('app.orgDetail.products.updateError')));
     } finally {
       setIsSaving(null);
     }
   }
 
-  async function handleDelete(product: Product) {
-    const confirmed = window.confirm(t('app.orgDetail.products.deleteConfirm', { name: product.name }));
-    if (!confirmed) {
-      return;
-    }
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    const product = deleteTarget;
+    setDeleteTarget(null);
+    await handleDelete(product);
+  }
 
+  async function handleDelete(product: Product) {
     setIsDeleting(product._id);
     setError(null);
     setSuccess(null);
@@ -195,13 +181,14 @@ export function ProductSection({ orgId }: { orgId: string }) {
       setSuccess(t('app.orgDetail.products.deleteSuccess'));
       await loadProducts();
     } catch (err) {
-      setError(parseError(err, t('app.orgDetail.products.deleteError')));
+      setError(parseApiError(err, t('app.orgDetail.products.deleteError')));
     } finally {
       setIsDeleting(null);
     }
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
         <CardTitle>{t('app.orgDetail.products.title')}</CardTitle>
@@ -332,7 +319,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => void handleDelete(product)}
+                          onClick={() => setDeleteTarget(product)}
                           disabled={isDeleting === product._id}
                         >
                           {isDeleting === product._id ? t('app.orgDetail.products.deleting') : t('app.orgDetail.products.delete')}
@@ -352,5 +339,24 @@ export function ProductSection({ orgId }: { orgId: string }) {
         )}
       </CardContent>
     </Card>
+
+    <Modal
+      open={deleteTarget !== null}
+      onClose={() => setDeleteTarget(null)}
+      title={t('app.orgDetail.products.deleteConfirmTitle')}
+      footer={
+        <>
+          <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+            {t('common.cancel')}
+          </Button>
+          <Button variant="destructive" onClick={() => void confirmDelete()}>
+            {t('app.orgDetail.products.delete')}
+          </Button>
+        </>
+      }
+    >
+      <p>{t('app.orgDetail.products.deleteConfirm', { name: deleteTarget?.name ?? '' })}</p>
+    </Modal>
+    </>
   );
 }

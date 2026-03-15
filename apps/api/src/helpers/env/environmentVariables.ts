@@ -16,6 +16,10 @@ export interface ENVList {
   SMTP_USER: string | undefined;
   SMTP_PASS: string | undefined;
   SMTP_FROM: string | undefined;
+  /** Optional: Redis connection URL (e.g. redis://localhost:6379). When set, the
+   *  distributed Redis store is used for rate limiting; otherwise falls back to
+   *  an in-memory store (suitable for single-instance deployments only). */
+  REDIS_URL: string | undefined;
 }
 
 export const EnvironmentVariables: ENVList = {
@@ -34,10 +38,12 @@ export const EnvironmentVariables: ENVList = {
   SMTP_USER: env.SMTP_USER,
   SMTP_PASS: env.SMTP_PASS,
   SMTP_FROM: env.SMTP_FROM,
+  REDIS_URL: env.REDIS_URL,
 };
 
 export const OptionalEnvironmentVariables = new Set([
   'REFRESH_TOKEN_DAYS',
   'PRODUCT_NAME',
   'JWT_ACCESS_EXPIRES_IN',
+  'REDIS_URL',
 ]);

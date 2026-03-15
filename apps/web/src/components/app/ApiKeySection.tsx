@@ -22,7 +22,7 @@ export function ApiKeySection({ orgId }: { orgId: string }) {
     setError(null);
 
     try {
-      const response = await api.get(`/organization/${orgId}/create-api-key`);
+      const response = await api.post(`/organization/${orgId}/api-keys`);
       const key = response.data?.data?.key;
 
       if (!key) {

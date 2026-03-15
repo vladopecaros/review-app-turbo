@@ -15,11 +15,26 @@ export interface UserDocument extends Document {
       tokenHash: string;
       expiresAt: Date;
       createdAt: Date;
+      /** All tokens from the same login session share a familyId.
+       *  If a rotated-out token is replayed, the whole family is invalidated. */
+      familyId: string;
+    },
+  ];
+  /** Recently rotated-out token hashes kept to detect replay attacks (capped at 20). */
+  usedTokenHashes: [
+    {
+      tokenHash: string;
+      familyId: string;
+      usedAt: Date;
     },
   ];
   emailVerified: boolean;
   emailVerificationToken: string;
   emailVerificationTokenExpiresAt: Date;
+  /** Consecutive failed login attempts since the last successful login. */
+  failedLoginAttempts: number;
+  /** Account is locked until this timestamp; null = not locked. */
+  lockedUntil: Date | null;
 }
 
 const userSchema = new Schema<UserDocument>(
@@ -63,6 +78,17 @@ const userSchema = new Schema<UserDocument>(
           required: true,
           default: Date.now,
         },
+        familyId: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+    usedTokenHashes: [
+      {
+        tokenHash: { type: String, required: true },
+        familyId: { type: String, required: true },
+        usedAt: { type: Date, required: true, default: Date.now },
       },
     ],
     emailVerified: {
@@ -79,6 +105,14 @@ const userSchema = new Schema<UserDocument>(
       required: false,
       type: Date,
       select: false,
+    },
+    failedLoginAttempts: {
+      type: Number,
+      default: 0,
+    },
+    lockedUntil: {
+      type: Date,
+      default: null,
     },
   },
   {

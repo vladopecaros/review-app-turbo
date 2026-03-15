@@ -7,6 +7,7 @@ import { generateEmailVerificationToken } from '../../utils/emailVerification';
 import { EmailService } from '../email/email.service';
 import { EnvironmentVariables } from '../../helpers/env/environmentVariables';
 import { logger } from '../../config/logger';
+import crypto from 'crypto';
 
 export class AuthService {
   constructor(
@@ -46,6 +47,15 @@ export class AuthService {
       throw new AppError('Invalid credentials', 401);
     }
 
+    // Check account lockout before validating the password so we don't leak
+    // whether the account exists via timing differences.
+    if (foundUser.lockedUntil && foundUser.lockedUntil > new Date()) {
+      throw new AppError(
+        'Account temporarily locked due to too many failed attempts. Please try again later.',
+        429,
+      );
+    }
+
     if (!foundUser.emailVerified) {
       throw new AppError('Email not verified', 403);
     }
@@ -53,17 +63,27 @@ export class AuthService {
     const passwordMatch = await foundUser.comparePasswords(input.password);
 
     if (!passwordMatch) {
+      await this.users.recordFailedLogin(foundUser._id.toString());
       throw new AppError('Invalid credentials', 401);
     }
 
+    // Successful login — reset lockout counters
+    await this.users.clearFailedLoginAttempts(foundUser._id.toString());
+
     const userId = foundUser.id.toString();
+    const familyId = crypto.randomUUID();
 
     const { accessToken, refreshToken, refreshTokenExpiry } = this.issueTokens({
       id: userId,
       role: foundUser.role,
     });
 
-    await this.users.addRefreshToken(userId, refreshToken, refreshTokenExpiry);
+    await this.users.addRefreshToken(
+      userId,
+      refreshToken,
+      refreshTokenExpiry,
+      familyId,
+    );
 
     logger.info('User logged in', { userId });
     return {
@@ -74,13 +94,28 @@ export class AuthService {
   }
 
   async refresh(refreshToken: string) {
+    // Detect replay: if the token hash is in the recently-rotated list the
+    // original token may have been stolen.  Invalidate the whole family.
+    const usedEntry = await this.users.findUsedTokenHash(refreshToken);
+    if (usedEntry) {
+      logger.warn('Refresh token replay detected — invalidating family', {
+        familyId: usedEntry.familyId,
+        userId: usedEntry.userId,
+      });
+      await this.users.invalidateTokenFamily(
+        usedEntry.userId,
+        usedEntry.familyId,
+      );
+      throw new AppError('Invalid credentials', 401);
+    }
+
     const result = await this.users.findValidRefreshToken(refreshToken);
 
     if (!result) {
       throw new AppError('Invalid credentials', 401);
     }
 
-    const { user, expiresAt } = result;
+    const { user, expiresAt, familyId } = result;
 
     const tokenExpired = this.isExpired(expiresAt);
     const userId = user._id.toString();
@@ -104,6 +139,7 @@ export class AuthService {
       refreshToken,
       newToken,
       refreshTokenExpiry,
+      familyId,
     );
 
     return {

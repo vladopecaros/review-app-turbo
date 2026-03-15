@@ -5,6 +5,15 @@ import { UserDocument, UserModel } from './user.model';
 import { User } from './user.types';
 import crypto from 'crypto';
 
+/** How many rotated-out token hashes to remember per user for replay detection. */
+const MAX_USED_HASHES = 20;
+
+/** Consecutive failures before the account is temporarily locked. */
+const MAX_FAILED_ATTEMPTS = 5;
+
+/** Lock duration in milliseconds (15 minutes). */
+const LOCK_DURATION_MS = 15 * 60 * 1000;
+
 export class UserRepository {
   async create(data: { email: string; password: string }): Promise<User> {
     try {
@@ -19,18 +28,25 @@ export class UserRepository {
   }
 
   async findByEmail(email: string) {
-    return UserModel.findOne({ email }).select('+password');
+    return UserModel.findOne({ email }).select(
+      '+password +failedLoginAttempts +lockedUntil',
+    );
   }
 
   async findById(id: Types.ObjectId) {
     return UserModel.findOne({ _id: id });
   }
 
-  async addRefreshToken(userId: string, refreshToken: string, expiresAt: Date) {
+  async addRefreshToken(
+    userId: string,
+    refreshToken: string,
+    expiresAt: Date,
+    familyId: string,
+  ) {
     const tokenHash = hashRefreshToken(refreshToken);
     await UserModel.updateOne(
       { _id: userId },
-      { $push: { refreshTokens: { tokenHash, expiresAt } } },
+      { $push: { refreshTokens: { tokenHash, expiresAt, familyId } } },
     );
   }
 
@@ -52,11 +68,13 @@ export class UserRepository {
     oldToken: string,
     newToken: string,
     newExpiresAt: Date,
+    familyId: string,
   ) {
     const oldHash = hashRefreshToken(oldToken);
     const newHash = hashRefreshToken(newToken);
 
-    // Use an update pipeline to atomically remove + add without path conflicts.
+    // Atomically: remove the old token, add the new token (same familyId),
+    // and prepend the old hash to usedTokenHashes (capped at MAX_USED_HASHES).
     await UserModel.updateOne(
       { _id: userId },
       [
@@ -71,19 +89,60 @@ export class UserRepository {
                     cond: { $ne: ['$$token.tokenHash', oldHash] },
                   },
                 },
-                [{ tokenHash: newHash, expiresAt: newExpiresAt }],
+                [{ tokenHash: newHash, expiresAt: newExpiresAt, familyId }],
+              ],
+            },
+            usedTokenHashes: {
+              $slice: [
+                {
+                  $concatArrays: [
+                    [{ tokenHash: oldHash, familyId, usedAt: new Date() }],
+                    '$usedTokenHashes',
+                  ],
+                },
+                MAX_USED_HASHES,
               ],
             },
           },
         },
       ],
-      { updatePipeline: true },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose typings don't expose updatePipeline option
+      { updatePipeline: true } as any,
+    );
+  }
+
+  /** Invalidate all refresh tokens and used-hash records for a compromised family. */
+  async invalidateTokenFamily(userId: string, familyId: string) {
+    await UserModel.updateOne(
+      { _id: userId },
+      [
+        {
+          $set: {
+            refreshTokens: {
+              $filter: {
+                input: '$refreshTokens',
+                as: 't',
+                cond: { $ne: ['$$t.familyId', familyId] },
+              },
+            },
+            usedTokenHashes: {
+              $filter: {
+                input: '$usedTokenHashes',
+                as: 'u',
+                cond: { $ne: ['$$u.familyId', familyId] },
+              },
+            },
+          },
+        },
+      ],
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose typings don't expose updatePipeline option
+      { updatePipeline: true } as any,
     );
   }
 
   async findValidRefreshToken(
     token: string,
-  ): Promise<{ user: UserDocument; expiresAt: Date } | null> {
+  ): Promise<{ user: UserDocument; expiresAt: Date; familyId: string } | null> {
     const tokenHash = hashRefreshToken(token);
 
     const user = await UserModel.findOne({
@@ -99,8 +158,61 @@ export class UserRepository {
     return {
       user,
       expiresAt: entry.expiresAt,
+      familyId: entry.familyId,
     };
   }
+
+  /**
+   * Returns the familyId if the given token hash is found in the
+   * recently-rotated list, indicating a replay attack.
+   */
+  async findUsedTokenHash(
+    token: string,
+  ): Promise<{ userId: string; familyId: string } | null> {
+    const tokenHash = hashRefreshToken(token);
+
+    const user = await UserModel.findOne({
+      'usedTokenHashes.tokenHash': tokenHash,
+    });
+
+    if (!user) return null;
+
+    const entry = user.usedTokenHashes.find((t) => t.tokenHash === tokenHash);
+    if (!entry) return null;
+
+    return { userId: user._id.toString(), familyId: entry.familyId };
+  }
+
+  // ── Account lockout ───────────────────────────────────────────────────────
+
+  async recordFailedLogin(
+    userId: string,
+  ): Promise<{ lockedUntil: Date | null }> {
+    const user = await UserModel.findByIdAndUpdate(
+      userId,
+      { $inc: { failedLoginAttempts: 1 } },
+      { new: true },
+    );
+
+    if (!user) return { lockedUntil: null };
+
+    if (user.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+      const lockedUntil = new Date(Date.now() + LOCK_DURATION_MS);
+      await UserModel.updateOne({ _id: userId }, { lockedUntil });
+      return { lockedUntil };
+    }
+
+    return { lockedUntil: null };
+  }
+
+  async clearFailedLoginAttempts(userId: string): Promise<void> {
+    await UserModel.updateOne(
+      { _id: userId },
+      { failedLoginAttempts: 0, lockedUntil: null },
+    );
+  }
+
+  // ── Shared helpers ────────────────────────────────────────────────────────
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Mongoose lean() and populate() results lose their Document type; `any` used intentionally to map raw doc fields
   private toDomain(doc: any): User {

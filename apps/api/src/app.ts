@@ -1,6 +1,7 @@
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import compression from 'compression';
 import { EnvironmentVariables } from './helpers/env/environmentVariables';
 import { UserRepository } from './modules/user/user.repository';
 import { AuthService } from './modules/auth/auth.service';
@@ -85,7 +86,35 @@ const publicReviewController = new PublicReviewController(reviewService);
 const app = express();
 const requireApiKey = createRequireApiKey(organizationRepository);
 
-app.use(helmet());
+const isProduction = EnvironmentVariables.Environment === 'production';
+const frontendUrl = EnvironmentVariables.FRONTEND_URL ?? '';
+
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'"], // inline styles needed by some email clients
+        imgSrc: ["'self'", 'data:', 'https:'],
+        fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+        connectSrc: [
+          "'self'",
+          // Allow the frontend origin to call back to the API (e.g. OpenAPI preview)
+          ...(frontendUrl ? [frontendUrl] : []),
+        ],
+        frameSrc: ["'none'"],
+        objectSrc: ["'none'"],
+        upgradeInsecureRequests: isProduction ? [] : null,
+      },
+    },
+    // Force HTTPS in production
+    strictTransportSecurity: isProduction
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
+  }),
+);
+app.use(compression());
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 app.use(requestLogMiddleware);
@@ -149,6 +178,10 @@ app.use(
   requireApiKey,
   createPublicReviewRoutes(publicReviewController),
 );
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+});
 
 app.get('/', (_req, res) => {
   res.json({ message: 'Hello from Express + TypeScript 🚀' });

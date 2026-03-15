@@ -5,13 +5,17 @@
   "description": "Component source registry for @reviewlico/cli — not a runtime dependency",
   "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "devDependencies": {
+    "@testing-library/react": "^16",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jsdom": "^26",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3"
   }
 }

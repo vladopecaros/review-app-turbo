@@ -15,8 +15,8 @@ export function createOrganizationRoutes(
     requireAuth,
     controller.inviteUser.bind(controller),
   );
-  router.get(
-    '/:id/create-api-key',
+  router.post(
+    '/:id/api-keys',
     requireAuth,
     controller.getApiKey.bind(controller),
   );
