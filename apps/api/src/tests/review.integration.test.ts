@@ -285,7 +285,9 @@ test('private: filters reviews by rating', async () => {
 
   assert.equal(res.status, 200);
   assert.ok(res.body.data.reviews.length >= 1);
-  assert.ok(res.body.data.reviews.every((r: { rating: number }) => r.rating === 5));
+  assert.ok(
+    res.body.data.reviews.every((r: { rating: number }) => r.rating === 5),
+  );
 });
 
 test('private: paginates reviews correctly', async () => {
