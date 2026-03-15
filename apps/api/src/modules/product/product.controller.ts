@@ -119,7 +119,10 @@ export class ProductController {
     if (!Types.ObjectId.isValid(organizationId.toString()))
       throw new AppError('Organization ID is not in correct format', 400);
 
-    const { name, slug, description, active, metadata } = parseBody(updateProductSchema, req.body);
+    const { name, slug, description, active, metadata } = parseBody(
+      updateProductSchema,
+      req.body,
+    );
 
     const result = await this.products.updateByExternalId(
       externalProductId.toString(),

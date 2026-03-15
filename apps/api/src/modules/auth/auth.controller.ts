@@ -17,7 +17,10 @@ export class AuthController {
 
   async register(req: Request, res: Response) {
     const { email, password } = parseBody(registerSchema, req.body);
-    const { firstName, lastName } = req.body as { firstName?: string; lastName?: string };
+    const { firstName, lastName } = req.body as {
+      firstName?: string;
+      lastName?: string;
+    };
 
     const user = await this.auth.register({
       email,

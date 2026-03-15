@@ -4,7 +4,10 @@ import { Types } from 'mongoose';
 import { logger } from '../../config/logger';
 import { AppError } from '../../errors/app.error';
 import { parseBody } from '../../validation/parseBody';
-import { createOrganizationSchema, inviteUserSchema } from '../../validation/organization.schema';
+import {
+  createOrganizationSchema,
+  inviteUserSchema,
+} from '../../validation/organization.schema';
 
 export class OrganizationController {
   constructor(private readonly org: OrganizationService) {}
@@ -72,7 +75,10 @@ export class OrganizationController {
       throw new AppError('Organization ID is not in correct format', 400);
     }
 
-    const { invitedUserId, invitedUserEmail, invitedUserRole } = parseBody(inviteUserSchema, req.body);
+    const { invitedUserId, invitedUserEmail, invitedUserRole } = parseBody(
+      inviteUserSchema,
+      req.body,
+    );
 
     if (invitedUserId && !Types.ObjectId.isValid(invitedUserId.toString())) {
       throw new AppError('Invited user ID is not in correct format', 400);

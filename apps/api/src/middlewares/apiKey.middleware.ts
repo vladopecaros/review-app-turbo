@@ -19,7 +19,10 @@ export function createRequireApiKey(organizations: OrganizationRepository) {
       const organization = await organizations.findByApiKey(apiKey);
 
       if (!organization) {
-        logger.warn('Invalid API key presented', { path: req.path, keyPrefix: apiKey.slice(0, 8) });
+        logger.warn('Invalid API key presented', {
+          path: req.path,
+          keyPrefix: apiKey.slice(0, 8),
+        });
         return res.status(401).json({ message: 'Unauthorized' });
       }
 

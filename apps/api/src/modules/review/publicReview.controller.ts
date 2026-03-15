@@ -20,7 +20,8 @@ export class PublicReviewController {
 
     const created = await this.reviews.createPublicReview(
       {
-        externalProductId: externalProductId != null ? externalProductId.trim() : undefined,
+        externalProductId:
+          externalProductId != null ? externalProductId.trim() : undefined,
         rating,
         text: text.trim(),
         reviewerName: reviewerName.trim(),

@@ -11,7 +11,9 @@ export const createPublicReviewSchema = z.object({
     .min(1, 'Review text is required')
     .max(5000, 'Review text must be 5000 characters or less'),
   reviewerName: z.string().min(1, 'Reviewer name is required'),
-  reviewerEmail: z.string().email('Reviewer email must be a valid email address'),
+  reviewerEmail: z
+    .string()
+    .email('Reviewer email must be a valid email address'),
   externalProductId: z
     .string()
     .min(1, 'externalProductId must be a non-empty string')

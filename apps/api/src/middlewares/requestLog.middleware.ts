@@ -10,7 +10,8 @@ export function requestLogMiddleware(
 
   res.on('finish', () => {
     const durationMs = Date.now() - start;
-    const level = res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
+    const level =
+      res.statusCode >= 500 ? 'error' : res.statusCode >= 400 ? 'warn' : 'info';
     logger[level](`${req.method} ${req.path}`, {
       statusCode: res.statusCode,
       durationMs,

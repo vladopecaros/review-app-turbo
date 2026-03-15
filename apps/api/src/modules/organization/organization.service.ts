@@ -76,7 +76,10 @@ export class OrganizationService {
         // Best-effort rollback; original error is more actionable.
         logger.error('Orphaned organization after failed membership creation', {
           organizationId: organization._id.toString(),
-          rollbackError: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+          rollbackError:
+            rollbackErr instanceof Error
+              ? rollbackErr.message
+              : String(rollbackErr),
         });
       }
       throw error;
