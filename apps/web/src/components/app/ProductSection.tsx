@@ -87,7 +87,7 @@ export function ProductSection({ orgId }: { orgId: string }) {
 
     try {
       const response = await api.get(`/organization/${orgId}/products`);
-      const payload = (response.data?.products ?? []) as Product[];
+      const payload = (response.data?.data?.products ?? []) as Product[];
 
       if (loadRequestIdRef.current !== requestId) {
         return;

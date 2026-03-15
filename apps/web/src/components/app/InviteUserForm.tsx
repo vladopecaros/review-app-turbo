@@ -33,7 +33,7 @@ export function InviteUserForm({ orgId }: { orgId: string }) {
         invitedUserRole: role,
       });
 
-      const invitationId = response.data?.invitation?._id;
+      const invitationId = response.data?.data?.invitation?._id;
       if (!invitationId) {
         throw new Error('Missing invitation id in response');
       }

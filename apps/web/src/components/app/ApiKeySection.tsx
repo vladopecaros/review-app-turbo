@@ -23,7 +23,7 @@ export function ApiKeySection({ orgId }: { orgId: string }) {
 
     try {
       const response = await api.get(`/organization/${orgId}/create-api-key`);
-      const key = response.data?.key;
+      const key = response.data?.data?.key;
 
       if (!key) {
         throw new Error('Missing API key in response');
