@@ -394,7 +394,7 @@ test('organization invite rejects unsupported role values', async () => {
 
   const orgRes = await createOrganization(ownerAccessToken, 'org-invalid-role');
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const inviteeToken = await registerAndExtractToken(inviteeEmail);
@@ -428,7 +428,7 @@ test('organization invite accepts invited user email', async () => {
 
   const orgRes = await createOrganization(ownerAccessToken, 'org-email-invite');
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const inviteeToken = await registerAndExtractToken(inviteeEmail);
@@ -442,7 +442,7 @@ test('organization invite accepts invited user email', async () => {
   );
 
   assert.equal(inviteRes.status, 200);
-  const invitationId = inviteRes.body.invitation?._id?.toString();
+  const invitationId = inviteRes.body.data.invitation?._id?.toString();
   assert.ok(invitationId);
 
   const inviteMailArgs = mailerStub.getCall(mailerStub.callCount - 1)
@@ -469,7 +469,7 @@ test('invited users can open organization detail and decline invitation', async 
     'org-invited-org-detail',
   );
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const inviteeToken = await registerAndExtractToken(inviteeEmail);
@@ -485,7 +485,7 @@ test('invited users can open organization detail and decline invitation', async 
   );
 
   assert.equal(inviteRes.status, 200);
-  const invitationId = inviteRes.body.invitation?._id?.toString();
+  const invitationId = inviteRes.body.data.invitation?._id?.toString();
   assert.ok(invitationId);
 
   const invitedOrgDetailRes = await request
@@ -493,8 +493,8 @@ test('invited users can open organization detail and decline invitation', async 
     .set('Authorization', `Bearer ${inviteeAccessToken}`);
 
   assert.equal(invitedOrgDetailRes.status, 200);
-  assert.equal(invitedOrgDetailRes.body.membershipStatus, 'invited');
-  assert.equal(invitedOrgDetailRes.body.invitationId, invitationId);
+  assert.equal(invitedOrgDetailRes.body.data.membershipStatus, 'invited');
+  assert.equal(invitedOrgDetailRes.body.data.invitationId, invitationId);
 
   const declineRes = await declineInvitation(inviteeAccessToken, invitationId!);
   assert.equal(declineRes.status, 200);
@@ -504,7 +504,7 @@ test('invited users can open organization detail and decline invitation', async 
     .set('Authorization', `Bearer ${inviteeAccessToken}`);
 
   assert.equal(orgListRes.status, 200);
-  assert.deepEqual(orgListRes.body.organizations, []);
+  assert.deepEqual(orgListRes.body.data.organizations, []);
 });
 
 test('organization member cannot create or update products', async () => {
@@ -521,7 +521,7 @@ test('organization member cannot create or update products', async () => {
     'org-product-perms',
   );
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const memberToken = await registerAndExtractToken(memberEmail);
@@ -539,7 +539,7 @@ test('organization member cannot create or update products', async () => {
     'member',
   );
   assert.equal(inviteRes.status, 200);
-  const invitationId = inviteRes.body.invitation?._id?.toString();
+  const invitationId = inviteRes.body.data.invitation?._id?.toString();
   assert.ok(invitationId);
 
   const acceptRes = await acceptInvitation(memberAccessToken, invitationId!);
@@ -583,7 +583,7 @@ test('api key can bulk create products for organization', async () => {
 
   const orgRes = await createOrganization(ownerAccessToken, 'org-product-bulk');
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const apiKeyRes = await getOrganizationApiKey(
@@ -591,7 +591,7 @@ test('api key can bulk create products for organization', async () => {
     organizationId!,
   );
   assert.equal(apiKeyRes.status, 200);
-  const apiKey = apiKeyRes.body.key as string;
+  const apiKey = apiKeyRes.body.data.key as string;
   assert.ok(apiKey);
 
   const bulkRes = await request
@@ -614,14 +614,14 @@ test('api key can bulk create products for organization', async () => {
     });
 
   assert.equal(bulkRes.status, 200);
-  assert.equal(bulkRes.body.result.createdCount, 2);
-  assert.equal(bulkRes.body.result.failedCount, 0);
+  assert.equal(bulkRes.body.data.result.createdCount, 2);
+  assert.equal(bulkRes.body.data.result.failedCount, 0);
 
   const listRes = await request
     .get(`/organization/${organizationId}/products`)
     .set('Authorization', `Bearer ${ownerAccessToken}`);
   assert.equal(listRes.status, 200);
-  assert.equal(listRes.body.products.length, 2);
+  assert.equal(listRes.body.data.products.length, 2);
 });
 
 test('api key bulk create rejects missing body with validation error', async () => {
@@ -637,7 +637,7 @@ test('api key bulk create rejects missing body with validation error', async () 
     'org-product-bulk-missing-body',
   );
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const apiKeyRes = await getOrganizationApiKey(
@@ -645,7 +645,7 @@ test('api key bulk create rejects missing body with validation error', async () 
     organizationId!,
   );
   assert.equal(apiKeyRes.status, 200);
-  const apiKey = apiKeyRes.body.key as string;
+  const apiKey = apiKeyRes.body.data.key as string;
   assert.ok(apiKey);
 
   const bulkRes = await request
@@ -669,7 +669,7 @@ test('api key bulk create returns per-item duplicate errors', async () => {
     'org-product-bulk-duplicate',
   );
   assert.equal(orgRes.status, 200);
-  const organizationId = orgRes.body.organization?._id?.toString();
+  const organizationId = orgRes.body.data.organization?._id?.toString();
   assert.ok(organizationId);
 
   const apiKeyRes = await getOrganizationApiKey(
@@ -677,7 +677,7 @@ test('api key bulk create returns per-item duplicate errors', async () => {
     organizationId!,
   );
   assert.equal(apiKeyRes.status, 200);
-  const apiKey = apiKeyRes.body.key as string;
+  const apiKey = apiKeyRes.body.data.key as string;
   assert.ok(apiKey);
 
   const firstRes = await request
@@ -693,7 +693,7 @@ test('api key bulk create returns per-item duplicate errors', async () => {
       ],
     });
   assert.equal(firstRes.status, 200);
-  assert.equal(firstRes.body.result.createdCount, 1);
+  assert.equal(firstRes.body.data.result.createdCount, 1);
 
   const secondRes = await request
     .post('/public/products/bulk')
@@ -714,9 +714,9 @@ test('api key bulk create returns per-item duplicate errors', async () => {
     });
 
   assert.equal(secondRes.status, 200);
-  assert.equal(secondRes.body.result.createdCount, 1);
-  assert.equal(secondRes.body.result.failedCount, 1);
-  assert.match(secondRes.body.result.errors[0].message, /already exists/i);
+  assert.equal(secondRes.body.data.result.createdCount, 1);
+  assert.equal(secondRes.body.data.result.failedCount, 1);
+  assert.match(secondRes.body.data.result.errors[0].message, /already exists/i);
 });
 
 test('organization access is forbidden for non-members', async () => {
@@ -730,7 +730,7 @@ test('organization access is forbidden for non-members', async () => {
 
   const orgRes = await createOrganization(ownerAccessToken, 'org-forbidden');
   assert.equal(orgRes.status, 200);
-  const orgId = orgRes.body.organization?._id?.toString();
+  const orgId = orgRes.body.data.organization?._id?.toString();
   assert.ok(orgId);
 
   const memberToken = await registerAndExtractToken(memberEmail);

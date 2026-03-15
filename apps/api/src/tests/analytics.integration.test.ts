@@ -63,11 +63,11 @@ async function setupOrgAndKey(accessToken: string, slug: string) {
     .post('/organization')
     .set('Authorization', `Bearer ${accessToken}`)
     .send({ name: 'Test Org', slug });
-  const orgId = orgRes.body.organization._id as string;
+  const orgId = orgRes.body.data.organization._id as string;
   const keyRes = await request
     .get(`/organization/${orgId}/create-api-key`)
     .set('Authorization', `Bearer ${accessToken}`);
-  return { orgId, apiKey: keyRes.body.key as string };
+  return { orgId, apiKey: keyRes.body.data.key as string };
 }
 
 async function setupProduct(

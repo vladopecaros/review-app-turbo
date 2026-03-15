@@ -64,11 +64,11 @@ async function setupOrgAndKey(accessToken: string, slug: string) {
     .post('/organization')
     .set('Authorization', `Bearer ${accessToken}`)
     .send({ name: 'Test Org', slug });
-  const orgId = orgRes.body.organization._id as string;
+  const orgId = orgRes.body.data.organization._id as string;
   const keyRes = await request
     .get(`/organization/${orgId}/create-api-key`)
     .set('Authorization', `Bearer ${accessToken}`);
-  return { orgId, apiKey: keyRes.body.key as string };
+  return { orgId, apiKey: keyRes.body.data.key as string };
 }
 
 async function setupProduct(
@@ -167,8 +167,8 @@ test('public: lists reviews with pagination', async () => {
 
   const res = await request.get('/public/reviews').set('x-api-key', apiKey);
   assert.equal(res.status, 200);
-  assert.equal(res.body.reviews.length, 3);
-  assert.ok(res.body.pagination.total >= 3);
+  assert.equal(res.body.data.reviews.length, 3);
+  assert.ok(res.body.data.pagination.total >= 3);
 });
 
 test('public: lists reviews filtered by externalProductId', async () => {
@@ -197,8 +197,8 @@ test('public: lists reviews filtered by externalProductId', async () => {
     .set('x-api-key', apiKey);
 
   assert.equal(res.status, 200);
-  assert.equal(res.body.reviews.length, 1);
-  assert.equal(res.body.reviews[0].externalProductId, 'product-a');
+  assert.equal(res.body.data.reviews.length, 1);
+  assert.equal(res.body.data.reviews[0].externalProductId, 'product-a');
 });
 
 test('private: lists all reviews for organization', async () => {
@@ -217,8 +217,8 @@ test('private: lists all reviews for organization', async () => {
     .set('Authorization', `Bearer ${token}`);
 
   assert.equal(res.status, 200);
-  assert.ok(res.body.reviews.length >= 1);
-  assert.ok(res.body.pagination);
+  assert.ok(res.body.data.reviews.length >= 1);
+  assert.ok(res.body.data.pagination);
 });
 
 test('private: filters reviews by status', async () => {
@@ -243,9 +243,9 @@ test('private: filters reviews by status', async () => {
     .set('Authorization', `Bearer ${token}`);
 
   assert.equal(rejectedRes.status, 200);
-  assert.ok(rejectedRes.body.reviews.length >= 1);
+  assert.ok(rejectedRes.body.data.reviews.length >= 1);
   assert.ok(
-    rejectedRes.body.reviews.every(
+    rejectedRes.body.data.reviews.every(
       (r: { status: string }) => r.status === 'rejected',
     ),
   );
@@ -256,7 +256,7 @@ test('private: filters reviews by status', async () => {
 
   assert.equal(publishedRes.status, 200);
   assert.ok(
-    publishedRes.body.reviews.every(
+    publishedRes.body.data.reviews.every(
       (r: { status: string }) => r.status === 'published',
     ),
   );
@@ -284,8 +284,8 @@ test('private: filters reviews by rating', async () => {
     .set('Authorization', `Bearer ${token}`);
 
   assert.equal(res.status, 200);
-  assert.ok(res.body.reviews.length >= 1);
-  assert.ok(res.body.reviews.every((r: { rating: number }) => r.rating === 5));
+  assert.ok(res.body.data.reviews.length >= 1);
+  assert.ok(res.body.data.reviews.every((r: { rating: number }) => r.rating === 5));
 });
 
 test('private: paginates reviews correctly', async () => {
@@ -305,15 +305,15 @@ test('private: paginates reviews correctly', async () => {
     .get(`/organization/${orgId}/reviews?page=1&limit=10`)
     .set('Authorization', `Bearer ${token}`);
   assert.equal(page1.status, 200);
-  assert.equal(page1.body.reviews.length, 10);
-  assert.equal(page1.body.pagination.page, 1);
-  assert.equal(page1.body.pagination.totalPages, 2);
+  assert.equal(page1.body.data.reviews.length, 10);
+  assert.equal(page1.body.data.pagination.page, 1);
+  assert.equal(page1.body.data.pagination.totalPages, 2);
 
   const page2 = await request
     .get(`/organization/${orgId}/reviews?page=2&limit=10`)
     .set('Authorization', `Bearer ${token}`);
   assert.equal(page2.status, 200);
-  assert.equal(page2.body.reviews.length, 5);
+  assert.equal(page2.body.data.reviews.length, 5);
 });
 
 test('private: gets single review by id', async () => {
@@ -400,7 +400,7 @@ test('private: member cannot update review status', async () => {
     .post(`/organization/${orgId}/invite-user`)
     .set('Authorization', `Bearer ${ownerToken}`)
     .send({ invitedUserId: member!._id.toString(), invitedUserRole: 'member' });
-  const invitationId = inviteRes.body.invitation._id as string;
+  const invitationId = inviteRes.body.data.invitation._id as string;
   await request
     .put(`/organization-memberships/invitations/${invitationId}/accept`)
     .set('Authorization', `Bearer ${memberToken}`);
