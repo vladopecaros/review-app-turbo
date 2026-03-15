@@ -2,6 +2,8 @@ import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { EnvironmentVariables } from '../../helpers/env/environmentVariables';
 import { AppError } from '../../errors/app.error';
+import { parseBody } from '../../validation/parseBody';
+import { loginSchema, registerSchema } from '../../validation/auth.schema';
 
 const refreshCookiesOptions = {
   httpOnly: true,
@@ -14,11 +16,8 @@ export class AuthController {
   constructor(private readonly auth: AuthService) {}
 
   async register(req: Request, res: Response) {
-    const { email, password, firstName, lastName } = req.body;
-
-    if (!email || !password) {
-      throw new AppError('Email and password are required fields!', 400);
-    }
+    const { email, password } = parseBody(registerSchema, req.body);
+    const { firstName, lastName } = req.body as { firstName?: string; lastName?: string };
 
     const user = await this.auth.register({
       email,
@@ -38,11 +37,7 @@ export class AuthController {
   }
 
   async login(req: Request, res: Response) {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      throw new AppError('Email and password are required', 400);
-    }
+    const { email, password } = parseBody(loginSchema, req.body);
 
     const user = await this.auth.login({ email, password });
 

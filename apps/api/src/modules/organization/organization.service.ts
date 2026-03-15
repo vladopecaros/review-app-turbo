@@ -5,6 +5,7 @@ import { AppError } from '../../errors/app.error';
 import { OrganizationMembershipDocument } from '../organizationMembership/organizationMembership.model';
 import { EmailService } from '../email/email.service';
 import { UserService } from '../user/user.service';
+import { logger } from '../../config/logger';
 
 export class OrganizationService {
   private transactionsSupported: boolean | null = null;
@@ -71,8 +72,12 @@ export class OrganizationService {
     } catch (error) {
       try {
         await this.organizations.deleteById(organization._id);
-      } catch {
+      } catch (rollbackErr) {
         // Best-effort rollback; original error is more actionable.
+        logger.error('Orphaned organization after failed membership creation', {
+          organizationId: organization._id.toString(),
+          rollbackError: rollbackErr instanceof Error ? rollbackErr.message : String(rollbackErr),
+        });
       }
       throw error;
     }

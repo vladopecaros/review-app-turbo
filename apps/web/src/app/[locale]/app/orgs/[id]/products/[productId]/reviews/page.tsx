@@ -9,6 +9,7 @@ import { ReviewSection } from '@/components/app/ReviewSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import axios from 'axios';
 import api from '@/lib/api';
 import type { Organization, Product } from '@/types';
 
@@ -31,7 +32,7 @@ export default function ProductReviewsPage() {
   useEffect(() => {
     if (!orgId || !externalProductId) return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function load() {
       setState('loading');
@@ -39,14 +40,12 @@ export default function ProductReviewsPage() {
 
       try {
         const [orgResponse, productsResponse] = await Promise.all([
-          api.get(`/organization/${orgId}`),
-          api.get(`/organization/${orgId}/products`),
+          api.get(`/organization/${orgId}`, { signal: controller.signal }),
+          api.get(`/organization/${orgId}/products`, { signal: controller.signal }),
         ]);
 
-        if (cancelled) return;
-
-        const orgPayload = (orgResponse.data?.organization ?? orgResponse.data) as Organization;
-        const products = (productsResponse.data?.products ?? []) as Product[];
+        const orgPayload = orgResponse.data?.data?.organization as Organization;
+        const products = (productsResponse.data?.data?.products ?? []) as Product[];
         const found =
           products.find((p) => p.externalProductId === externalProductId) ??
           null;
@@ -55,7 +54,7 @@ export default function ProductReviewsPage() {
         setProduct(found);
         setState('ready');
       } catch (err) {
-        if (cancelled) return;
+        if (axios.isCancel(err)) return;
         setState('error');
         setError(err instanceof Error ? err.message : t('common.error'));
       }
@@ -64,7 +63,7 @@ export default function ProductReviewsPage() {
     void load();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [orgId, externalProductId, t]);
 

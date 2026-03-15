@@ -6,6 +6,7 @@ import { AppError } from '../../errors/app.error';
 import { generateEmailVerificationToken } from '../../utils/emailVerification';
 import { EmailService } from '../email/email.service';
 import { EnvironmentVariables } from '../../helpers/env/environmentVariables';
+import { logger } from '../../config/logger';
 
 export class AuthService {
   constructor(
@@ -31,6 +32,7 @@ export class AuthService {
 
     await this.emailService.sendVerificationEmail(newUser.email, token);
 
+    logger.info('User registered', { userId: newUser.id });
     return {
       user: newUser,
       accessToken: null,
@@ -63,6 +65,7 @@ export class AuthService {
 
     await this.users.addRefreshToken(userId, refreshToken, refreshTokenExpiry);
 
+    logger.info('User logged in', { userId });
     return {
       accessToken,
       refreshToken,
@@ -117,11 +120,10 @@ export class AuthService {
       throw new AppError('Invalid credentials', 401);
     }
 
-    await this.users.removeRefreshToken(
-      result.user._id.toString(),
-      refreshToken,
-    );
+    const userId = result.user._id.toString();
+    await this.users.removeRefreshToken(userId, refreshToken);
 
+    logger.info('User logged out', { userId });
     return {
       success: true,
     };

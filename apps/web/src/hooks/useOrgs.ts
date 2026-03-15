@@ -6,22 +6,15 @@ import api from '@/lib/api';
 import type { Organization } from '@/types';
 
 function parseOrganizations(payload: unknown): Organization[] {
-  if (Array.isArray(payload)) {
-    return payload as Organization[];
-  }
-
   if (payload && typeof payload === 'object') {
     const record = payload as Record<string, unknown>;
-
     if (Array.isArray(record.organizations)) {
       return record.organizations as Organization[];
     }
-
-    if (Array.isArray(record.data)) {
-      return record.data as Organization[];
-    }
   }
-
+  if (Array.isArray(payload)) {
+    return payload as Organization[];
+  }
   return [];
 }
 
@@ -36,7 +29,7 @@ export function useOrgs() {
 
     try {
       const response = await api.get('/organization');
-      setOrgs(parseOrganizations(response.data));
+      setOrgs(parseOrganizations(response.data?.data));
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load organizations';
       setError(message);
@@ -51,7 +44,7 @@ export function useOrgs() {
 
   const createOrg = useCallback(async (payload: { name: string; slug: string }) => {
     const response = await api.post('/organization', payload);
-    const created = (response.data?.organization ?? response.data) as Organization;
+    const created = response.data?.data?.organization as Organization;
 
     if (created?._id) {
       setOrgs((current) => [created, ...current]);

@@ -130,8 +130,8 @@ export function ReviewSection({
 
       if (loadRequestIdRef.current !== requestId) return;
 
-      setReviews((response.data?.reviews ?? []) as Review[]);
-      setPagination((response.data?.pagination ?? null) as ReviewPagination | null);
+      setReviews((response.data?.data?.reviews ?? []) as Review[]);
+      setPagination((response.data?.data?.pagination ?? null) as ReviewPagination | null);
     } catch (err) {
       if (loadRequestIdRef.current !== requestId) return;
       setError(parseError(err, t('common.error')));

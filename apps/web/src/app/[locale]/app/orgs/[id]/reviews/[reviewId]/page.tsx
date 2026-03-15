@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import axios from 'axios';
 import api from '@/lib/api';
 import type { Review } from '@/types';
 
@@ -89,7 +90,7 @@ export default function ReviewDetailPage() {
   useEffect(() => {
     if (!orgId || !reviewId) return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function load() {
       setState('loading');
@@ -98,17 +99,16 @@ export default function ReviewDetailPage() {
       try {
         const reviewResponse = await api.get(
           `/organization/${orgId}/reviews/${reviewId}`,
+          { signal: controller.signal },
         );
 
-        if (cancelled) return;
-
-        const fetchedReview = (reviewResponse.data?.review ?? null) as Review | null;
+        const fetchedReview = (reviewResponse.data?.data?.review ?? null) as Review | null;
 
         setReview(fetchedReview);
 
         setState('ready');
       } catch (err) {
-        if (cancelled) return;
+        if (axios.isCancel(err)) return;
         setState('error');
         setError(err instanceof Error ? err.message : t('common.error'));
       }
@@ -117,7 +117,7 @@ export default function ReviewDetailPage() {
     void load();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [orgId, reviewId, t]);
 

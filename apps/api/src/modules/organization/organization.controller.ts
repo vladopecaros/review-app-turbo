@@ -3,40 +3,17 @@ import { OrganizationService } from './organization.service';
 import { Types } from 'mongoose';
 import { logger } from '../../config/logger';
 import { AppError } from '../../errors/app.error';
+import { parseBody } from '../../validation/parseBody';
+import { createOrganizationSchema, inviteUserSchema } from '../../validation/organization.schema';
 
 export class OrganizationController {
   constructor(private readonly org: OrganizationService) {}
 
   async create(req: Request, res: Response) {
-    const { name, slug } = req.body;
     const { user } = req;
+    if (!user?.id) throw new AppError('Unauthorized', 401);
 
-    if (!user?.id) {
-      return res.status(401).json({
-        organization: null,
-        message: 'Unauthorized',
-      });
-    }
-
-    if (!name || !slug) {
-      return res.status(400).json({
-        organization: null,
-        message: 'Organization name and slug are required',
-      });
-    } else {
-      if (name.length < 3) {
-        return res.status(400).json({
-          organization: null,
-          message: 'Organization name must be more than 3 characters long',
-        });
-      }
-      if (slug.length < 3) {
-        return res.status(400).json({
-          organization: null,
-          message: 'Organization slug must be more than 3 characters long',
-        });
-      }
-    }
+    const { name, slug } = parseBody(createOrganizationSchema, req.body);
 
     const organization = await this.org.create({
       name,
@@ -46,42 +23,26 @@ export class OrganizationController {
 
     logger.info('Organization Created Successfully', organization);
 
-    return res.status(200).json({
-      organization,
-      message: 'Organization successfully created',
-    });
+    return res.status(200).json({ data: { organization } });
   }
 
   async getAllForUser(req: Request, res: Response) {
     const { user } = req;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        organization: null,
-        message: 'Unauthorized',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
 
     const organizations = await this.org.getAllForUser(
       new Types.ObjectId(user.id),
     );
 
-    return res.status(200).json({
-      organizations,
-      message: 'Organizations successfully retrieved for this user',
-    });
+    return res.status(200).json({ data: { organizations } });
   }
 
   async getById(req: Request, res: Response) {
     const { user } = req;
     const { id } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        organization: null,
-        message: 'Unauthorized',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
 
     if (!Types.ObjectId.isValid(id.toString())) {
       throw new AppError('Organization ID is not in correct format', 400);
@@ -93,46 +54,26 @@ export class OrganizationController {
     );
 
     return res.status(200).json({
-      organization: result.organization,
-      membershipStatus: result.membershipStatus,
-      invitationId: result.invitationId,
-      message: 'Successfully retrieved organization',
+      data: {
+        organization: result.organization,
+        membershipStatus: result.membershipStatus,
+        invitationId: result.invitationId,
+      },
     });
   }
 
   async inviteUser(req: Request, res: Response) {
     const { user } = req;
-    const { invitedUserId, invitedUserEmail, invitedUserRole } = req.body;
     const { id: organizationId } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
-
-    if (
-      (!invitedUserId && !invitedUserEmail) ||
-      !invitedUserRole ||
-      !organizationId
-    ) {
-      throw new AppError('Missing required fields', 400);
-    }
-
-    if (invitedUserRole !== 'admin' && invitedUserRole !== 'member') {
-      throw new AppError('Invited user role must be admin or member', 400);
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
 
     if (!Types.ObjectId.isValid(organizationId.toString())) {
       throw new AppError('Organization ID is not in correct format', 400);
     }
 
-    if (
-      invitedUserEmail &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(invitedUserEmail.toString().trim())
-    ) {
-      throw new AppError('Invited user email is not in correct format', 400);
-    }
+    const { invitedUserId, invitedUserEmail, invitedUserRole } = parseBody(inviteUserSchema, req.body);
+
     if (invitedUserId && !Types.ObjectId.isValid(invitedUserId.toString())) {
       throw new AppError('Invited user ID is not in correct format', 400);
     }
@@ -140,31 +81,22 @@ export class OrganizationController {
     const returnedInvitation = await this.org.inviteUser(
       new Types.ObjectId(user.id),
       invitedUserId ? new Types.ObjectId(invitedUserId) : null,
-      invitedUserEmail ? invitedUserEmail.toString().trim() : null,
+      invitedUserEmail ? invitedUserEmail.trim() : null,
       new Types.ObjectId(organizationId.toString()),
-      invitedUserRole as 'admin' | 'member',
+      invitedUserRole,
     );
 
-    return res.status(200).json({
-      invitation: returnedInvitation,
-      message: 'Member invited successfully',
-    });
+    return res.status(200).json({ data: { invitation: returnedInvitation } });
   }
 
   async getApiKey(req: Request, res: Response) {
     const { user } = req;
     const { id: organizationId } = req.params;
 
-    if (!user?.id) {
-      return res.status(401).json({
-        message: 'Unauthorized',
-      });
-    }
+    if (!user?.id) throw new AppError('Unauthorized', 401);
 
     if (!Types.ObjectId.isValid(organizationId.toString())) {
-      return res.status(400).json({
-        message: 'Organization Id not in correct format',
-      });
+      throw new AppError('Organization Id not in correct format', 400);
     }
 
     const key = await this.org.getApiKey(
@@ -172,9 +104,6 @@ export class OrganizationController {
       new Types.ObjectId(user.id),
     );
 
-    return res.status(200).json({
-      key,
-      message: 'Api key generated successfully',
-    });
+    return res.status(200).json({ data: { key } });
   }
 }

@@ -2,62 +2,25 @@ import { Request, Response } from 'express';
 import { Types } from 'mongoose';
 import { AppError } from '../../errors/app.error';
 import { ReviewService, ReviewScope } from './review.service';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { parseBody } from '../../validation/parseBody';
+import { createPublicReviewSchema } from '../../validation/publicReview.schema';
 
 export class PublicReviewController {
   constructor(private readonly reviews: ReviewService) {}
 
   async create(req: Request, res: Response) {
     const { apiKeyOrganizationId } = req;
-    const { rating, text, reviewerName, reviewerEmail, externalProductId } =
-      req.body;
 
     if (!apiKeyOrganizationId) {
       throw new AppError('Unauthorized', 401);
     }
 
-    if (typeof rating !== 'number' || !Number.isInteger(rating)) {
-      throw new AppError('Rating must be an integer between 1 and 5', 400);
-    }
-
-    if (rating < 1 || rating > 5) {
-      throw new AppError('Rating must be an integer between 1 and 5', 400);
-    }
-
-    if (typeof text !== 'string' || text.trim().length === 0) {
-      throw new AppError('Review text is required', 400);
-    }
-
-    if (text.trim().length > 5000) {
-      throw new AppError('Review text must be 5000 characters or less', 400);
-    }
-
-    if (typeof reviewerName !== 'string' || reviewerName.trim().length === 0) {
-      throw new AppError('Reviewer name is required', 400);
-    }
-
-    if (
-      typeof reviewerEmail !== 'string' ||
-      reviewerEmail.trim().length === 0 ||
-      !EMAIL_REGEX.test(reviewerEmail.trim())
-    ) {
-      throw new AppError('Reviewer email must be a valid email address', 400);
-    }
-
-    if (
-      externalProductId !== undefined &&
-      externalProductId !== null &&
-      (typeof externalProductId !== 'string' ||
-        externalProductId.trim().length === 0)
-    ) {
-      throw new AppError('externalProductId must be a non-empty string', 400);
-    }
+    const { rating, text, reviewerName, reviewerEmail, externalProductId } =
+      parseBody(createPublicReviewSchema, req.body);
 
     const created = await this.reviews.createPublicReview(
       {
-        externalProductId:
-          externalProductId != null ? externalProductId.trim() : undefined,
+        externalProductId: externalProductId != null ? externalProductId.trim() : undefined,
         rating,
         text: text.trim(),
         reviewerName: reviewerName.trim(),
@@ -66,10 +29,7 @@ export class PublicReviewController {
       new Types.ObjectId(apiKeyOrganizationId),
     );
 
-    return res.status(200).json({
-      review: created,
-      message: 'Review submitted successfully',
-    });
+    return res.status(200).json({ data: { review: created } });
   }
 
   async list(req: Request, res: Response) {
@@ -123,9 +83,10 @@ export class PublicReviewController {
     );
 
     return res.status(200).json({
-      reviews: result.reviews,
-      pagination: result.pagination,
-      message: 'Reviews fetched successfully',
+      data: {
+        reviews: result.reviews,
+        pagination: result.pagination,
+      },
     });
   }
 

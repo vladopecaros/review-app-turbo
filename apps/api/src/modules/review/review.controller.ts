@@ -3,6 +3,8 @@ import { Types } from 'mongoose';
 import { AppError } from '../../errors/app.error';
 import { ReviewService, ReviewScope } from './review.service';
 import { Review, ReviewStatus } from './review.types';
+import { parseBody } from '../../validation/parseBody';
+import { updateReviewStatusSchema } from '../../validation/review.schema';
 
 export class ReviewController {
   constructor(private readonly reviews: ReviewService) {}
@@ -80,9 +82,10 @@ export class ReviewController {
     );
 
     return res.status(200).json({
-      reviews: result.reviews.map((review) => this.toResponse(review)),
-      pagination: result.pagination,
-      message: 'Reviews fetched successfully',
+      data: {
+        reviews: result.reviews.map((review) => this.toResponse(review)),
+        pagination: result.pagination,
+      },
     });
   }
 
@@ -112,16 +115,12 @@ export class ReviewController {
       new Types.ObjectId(user.id),
     );
 
-    return res.status(200).json({
-      review: this.toResponse(review),
-      message: 'Review fetched successfully',
-    });
+    return res.status(200).json({ data: { review: this.toResponse(review) } });
   }
 
   async updateStatus(req: Request, res: Response) {
     const { user } = req;
     const { organizationId, reviewId } = req.params;
-    const { status } = req.body;
 
     if (!user?.id) {
       throw new AppError('Unauthorized', 401);
@@ -139,25 +138,16 @@ export class ReviewController {
       throw new AppError('Review ID is not in correct format', 400);
     }
 
-    const parsedStatus = this.parseStatus(status);
-    if (!parsedStatus) {
-      throw new AppError(
-        'Status must be one of published, pending, or rejected',
-        400,
-      );
-    }
+    const { status } = parseBody(updateReviewStatusSchema, req.body);
 
     const updated = await this.reviews.updateStatus(
       new Types.ObjectId(organizationId.toString()),
       new Types.ObjectId(reviewId.toString()),
-      parsedStatus,
+      status,
       new Types.ObjectId(user.id),
     );
 
-    return res.status(200).json({
-      review: this.toResponse(updated),
-      message: 'Review status updated successfully',
-    });
+    return res.status(200).json({ data: { review: this.toResponse(updated) } });
   }
 
   private parseRating(value: unknown): number | undefined | null {

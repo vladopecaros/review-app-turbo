@@ -10,6 +10,7 @@ import { ReviewSection } from '@/components/app/ReviewSection';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import axios from 'axios';
 import api from '@/lib/api';
 import type { Organization } from '@/types';
 
@@ -28,22 +29,21 @@ export default function OrgReviewsPage() {
   useEffect(() => {
     if (!orgId) return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function load() {
       setState('loading');
       setError(null);
 
       try {
-        const response = await api.get(`/organization/${orgId}`);
-        if (cancelled) return;
+        const response = await api.get(`/organization/${orgId}`, { signal: controller.signal });
 
-        const payload = (response.data?.organization ?? response.data) as Organization;
-        const membershipStatus = response.data?.membershipStatus as
+        const payload = response.data?.data?.organization as Organization;
+        const membershipStatus = response.data?.data?.membershipStatus as
           | 'active'
           | 'invited'
           | undefined;
-        const pendingInvitationId = response.data?.invitationId as
+        const pendingInvitationId = response.data?.data?.invitationId as
           | string
           | null
           | undefined;
@@ -59,7 +59,7 @@ export default function OrgReviewsPage() {
         setInvitationId(null);
         setState('ready');
       } catch (err) {
-        if (cancelled) return;
+        if (axios.isCancel(err)) return;
         setState('error');
         setError(err instanceof Error ? err.message : t('common.error'));
       }
@@ -68,7 +68,7 @@ export default function OrgReviewsPage() {
     void load();
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [orgId, t]);
 

@@ -7,6 +7,7 @@ import { AuthService } from './modules/auth/auth.service';
 import { AuthController } from './modules/auth/auth.controller';
 import { createAuthRoutes } from './modules/auth/auth.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
+import { requestLogMiddleware } from './middlewares/requestLog.middleware';
 import { EmailService } from './modules/email/email.service';
 import { createOrganizationRoutes } from './modules/organization/organization.routes';
 import { OrganizationController } from './modules/organization/organization.controller';
@@ -87,6 +88,7 @@ const requireApiKey = createRequireApiKey(organizationRepository);
 app.use(helmet());
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+app.use(requestLogMiddleware);
 app.use((req, res, next) => {
   const isPublicRoute = req.path.startsWith('/public');
 

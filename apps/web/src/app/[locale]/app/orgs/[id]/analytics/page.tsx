@@ -22,6 +22,7 @@ import { InvitationActions } from '@/components/app/InvitationActions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import axios from 'axios';
 import api from '@/lib/api';
 import type { Organization, Product } from '@/types';
 
@@ -152,20 +153,18 @@ export default function AnalyticsPage() {
   useEffect(() => {
     if (!orgId) return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function load() {
       setState('loading');
       setError(null);
 
       try {
-        const orgRes = await api.get(`/organization/${orgId}`);
+        const orgRes = await api.get(`/organization/${orgId}`, { signal: controller.signal });
 
-        if (cancelled) return;
-
-        const payload = (orgRes.data?.organization ?? orgRes.data) as Organization;
-        const membershipStatus = orgRes.data?.membershipStatus as 'active' | 'invited' | undefined;
-        const pendingInvitationId = orgRes.data?.invitationId as string | null | undefined;
+        const payload = orgRes.data?.data?.organization as Organization;
+        const membershipStatus = orgRes.data?.data?.membershipStatus as 'active' | 'invited' | undefined;
+        const pendingInvitationId = orgRes.data?.data?.invitationId as string | null | undefined;
 
         setOrg(payload);
 
@@ -176,21 +175,19 @@ export default function AnalyticsPage() {
         }
 
         const [productsRes, summaryRes, trendsRes] = await Promise.all([
-          api.get(`/organization/${orgId}/products`),
-          api.get(`/organization/${orgId}/analytics/summary`),
-          api.get(`/organization/${orgId}/analytics/trends?granularity=day`),
+          api.get(`/organization/${orgId}/products`, { signal: controller.signal }),
+          api.get(`/organization/${orgId}/analytics/summary`, { signal: controller.signal }),
+          api.get(`/organization/${orgId}/analytics/trends?granularity=day`, { signal: controller.signal }),
         ]);
 
-        if (cancelled) return;
-
-        setProducts((productsRes.data?.products ?? productsRes.data ?? []) as Product[]);
+        setProducts((productsRes.data?.data?.products ?? []) as Product[]);
         setSummary(summaryRes.data?.data as AnalyticsSummary);
         setTrends((trendsRes.data?.data ?? []) as TrendBucket[]);
 
         setInvitationId(null);
         setState('ready');
       } catch (err) {
-        if (cancelled) return;
+        if (axios.isCancel(err)) return;
         setState('error');
         setError(err instanceof Error ? err.message : t('common.error'));
       }
@@ -198,7 +195,7 @@ export default function AnalyticsPage() {
 
     void load();
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [orgId, t]);
 

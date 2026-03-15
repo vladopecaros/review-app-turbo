@@ -9,6 +9,7 @@ import { InvitationActions } from "@/components/app/InvitationActions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import axios from "axios";
 import api from "@/lib/api";
 import type { Organization, Product } from "@/types";
 import { copyToClipboard } from "@/lib/utils";
@@ -62,24 +63,21 @@ export default function IntegratePage() {
   useEffect(() => {
     if (!orgId) return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     async function load() {
       setState("loading");
       setError(null);
 
       try {
-        const orgRes = await api.get(`/organization/${orgId}`);
+        const orgRes = await api.get(`/organization/${orgId}`, { signal: controller.signal });
 
-        if (cancelled) return;
-
-        const payload = (orgRes.data?.organization ??
-          orgRes.data) as Organization;
-        const membershipStatus = orgRes.data?.membershipStatus as
+        const payload = orgRes.data?.data?.organization as Organization;
+        const membershipStatus = orgRes.data?.data?.membershipStatus as
           | "active"
           | "invited"
           | undefined;
-        const pendingInvitationId = orgRes.data?.invitationId as
+        const pendingInvitationId = orgRes.data?.data?.invitationId as
           | string
           | null
           | undefined;
@@ -92,18 +90,16 @@ export default function IntegratePage() {
           return;
         }
 
-        const productsRes = await api.get(`/organization/${orgId}/products`);
-
-        if (cancelled) return;
+        const productsRes = await api.get(`/organization/${orgId}/products`, { signal: controller.signal });
 
         setProducts(
-          (productsRes.data?.products ?? productsRes.data ?? []) as Product[],
+          (productsRes.data?.data?.products ?? []) as Product[],
         );
 
         setInvitationId(null);
         setState("ready");
       } catch (err) {
-        if (cancelled) return;
+        if (axios.isCancel(err)) return;
         setState("error");
         setError(err instanceof Error ? err.message : t("common.error"));
       }
@@ -111,7 +107,7 @@ export default function IntegratePage() {
 
     void load();
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [orgId, t]);
 

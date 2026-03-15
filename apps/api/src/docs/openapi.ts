@@ -4,13 +4,106 @@ export const openApiSpec = {
     title: 'Review App API',
     version: '1.0.0',
     description:
-      'OpenAPI specification for authentication, organization, and invitation flows.',
+      'OpenAPI specification for authentication, organization, product, review, and analytics flows.',
   },
   servers: [
     {
       url: '/',
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+      },
+      apiKey: {
+        type: 'apiKey',
+        in: 'header',
+        name: 'X-API-Key',
+      },
+    },
+    schemas: {
+      Error: {
+        type: 'object',
+        properties: {
+          message: { type: 'string', example: 'Something went wrong' },
+        },
+      },
+      Organization: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '665f1a2b3c4d5e6f7a8b9c0d' },
+          name: { type: 'string', example: 'Acme Corp' },
+          slug: { type: 'string', example: 'acme-corp' },
+          ownerUserId: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Product: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          externalProductId: { type: 'string', example: 'prod_123' },
+          organizationId: { type: 'string' },
+          name: { type: 'string', example: 'Widget Pro' },
+          slug: { type: 'string', example: 'widget-pro' },
+          description: { type: 'string' },
+          active: { type: 'boolean', example: true },
+          metadata: { type: 'object' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Review: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          organizationId: { type: 'string' },
+          externalProductId: { type: 'string' },
+          productName: { type: 'string' },
+          rating: { type: 'integer', minimum: 1, maximum: 5 },
+          text: { type: 'string' },
+          reviewerName: { type: 'string' },
+          reviewerEmail: { type: 'string', format: 'email' },
+          status: { type: 'string', enum: ['published', 'pending', 'rejected'] },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      PublicReview: {
+        type: 'object',
+        description: 'Stripped review safe for public consumption — no reviewerEmail or status',
+        properties: {
+          _id: { type: 'string' },
+          externalProductId: { type: 'string' },
+          rating: { type: 'integer', minimum: 1, maximum: 5 },
+          text: { type: 'string' },
+          reviewerName: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ApiKey: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string' },
+          keyPrefix: { type: 'string', example: 'rk_abcd12' },
+          createdAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Pagination: {
+        type: 'object',
+        properties: {
+          total: { type: 'integer' },
+          page: { type: 'integer' },
+          limit: { type: 'integer' },
+          totalPages: { type: 'integer' },
+        },
+      },
+    },
+  },
   paths: {
     '/': {
       get: {
@@ -25,21 +118,79 @@ export const openApiSpec = {
     '/auth/register': {
       post: {
         summary: 'Register user',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'user@example.com' },
+                  password: { type: 'string', minLength: 8, example: 'Str0ng!pw' },
+                  firstName: { type: 'string', example: 'Jane' },
+                  lastName: { type: 'string', example: 'Doe' },
+                },
+              },
+            },
+          },
+        },
         responses: {
           '200': {
             description: 'Registration successful (verification email sent)',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    user: { type: 'object', properties: { _id: { type: 'string' }, email: { type: 'string' } } },
+                    accessToken: { type: 'string' },
+                  },
+                },
+              },
+            },
           },
-          '400': { description: 'Invalid input' },
+          '400': { description: 'Invalid input', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '409': { description: 'Email already in use', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
     '/auth/login': {
       post: {
         summary: 'Login user',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['email', 'password'],
+                properties: {
+                  email: { type: 'string', format: 'email', example: 'user@example.com' },
+                  password: { type: 'string', example: 'Str0ng!pw' },
+                },
+              },
+            },
+          },
+        },
         responses: {
-          '200': { description: 'Login successful' },
-          '401': { description: 'Invalid credentials' },
-          '403': { description: 'Email not verified' },
+          '200': {
+            description: 'Login successful',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    user: { type: 'object', properties: { _id: { type: 'string' }, email: { type: 'string' } } },
+                    accessToken: { type: 'string' },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Missing credentials', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Invalid credentials', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '403': { description: 'Email not verified', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
@@ -75,23 +226,73 @@ export const openApiSpec = {
     '/organization': {
       post: {
         summary: 'Create organization',
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['name', 'slug'],
+                properties: {
+                  name: { type: 'string', minLength: 3, example: 'Acme Corp' },
+                  slug: { type: 'string', minLength: 3, example: 'acme-corp' },
+                },
+              },
+            },
+          },
+        },
         responses: {
-          '200': { description: 'Organization created' },
-          '400': { description: 'Invalid request body' },
-          '401': { description: 'Unauthorized' },
+          '200': {
+            description: 'Organization created',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: { organization: { $ref: '#/components/schemas/Organization' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid request body', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
       get: {
         summary: 'List organizations for authenticated user',
+        security: [{ bearerAuth: [] }],
         responses: {
-          '200': { description: 'Organizations fetched successfully' },
-          '401': { description: 'Unauthorized' },
+          '200': {
+            description: 'Organizations fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: {
+                        organizations: { type: 'array', items: { $ref: '#/components/schemas/Organization' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
     '/organization/{id}': {
       get: {
         summary: 'Get organization by id',
+        security: [{ bearerAuth: [] }],
         parameters: [
           {
             in: 'path',
@@ -102,11 +303,27 @@ export const openApiSpec = {
         ],
         responses: {
           '200': {
-            description:
-              'Organization fetched successfully (includes membershipStatus and invitationId for invited members)',
+            description: 'Organization fetched successfully (includes membershipStatus and invitationId for invited members)',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: {
+                        organization: { $ref: '#/components/schemas/Organization' },
+                        membershipStatus: { type: 'string', enum: ['active', 'invited'] },
+                        invitationId: { type: 'string', nullable: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
-          '400': { description: 'Invalid organization id format' },
-          '403': { description: 'Unauthorized to access organization' },
+          '400': { description: 'Invalid organization id format', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '403': { description: 'Unauthorized to access organization', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
@@ -220,10 +437,25 @@ export const openApiSpec = {
           },
         },
         responses: {
-          '200': { description: 'Review submitted successfully' },
-          '400': { description: 'Invalid request body' },
-          '401': { description: 'Unauthorized' },
-          '404': { description: 'Product not found' },
+          '200': {
+            description: 'Review submitted successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: { review: { $ref: '#/components/schemas/PublicReview' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid request body', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '404': { description: 'Product not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
       get: {
@@ -263,71 +495,67 @@ export const openApiSpec = {
           },
         ],
         responses: {
-          '200': { description: 'Reviews fetched successfully' },
-          '400': { description: 'Invalid query parameters' },
-          '401': { description: 'Unauthorized' },
-          '404': { description: 'Product not found' },
+          '200': {
+            description: 'Reviews fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: {
+                        reviews: { type: 'array', items: { $ref: '#/components/schemas/PublicReview' } },
+                        pagination: { $ref: '#/components/schemas/Pagination' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid query parameters', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '404': { description: 'Product not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
     '/organization/{id}/reviews': {
       get: {
         summary: 'List reviews for organization (JWT required)',
+        security: [{ bearerAuth: [] }],
         parameters: [
-          {
-            in: 'path',
-            name: 'id',
-            required: true,
-            schema: { type: 'string' },
-          },
-          {
-            in: 'query',
-            name: 'scope',
-            required: false,
-            schema: { type: 'string', enum: ['all', 'org', 'product'] },
-          },
-          {
-            in: 'query',
-            name: 'externalProductId',
-            required: false,
-            description:
-              'Your own product ID. Only valid when scope=product. Filters reviews to a specific product.',
-            schema: { type: 'string' },
-          },
-          {
-            in: 'query',
-            name: 'status',
-            required: false,
-            schema: {
-              type: 'string',
-              enum: ['published', 'pending', 'rejected'],
-            },
-          },
-          {
-            in: 'query',
-            name: 'page',
-            required: false,
-            schema: { type: 'integer' },
-          },
-          {
-            in: 'query',
-            name: 'limit',
-            required: false,
-            schema: { type: 'integer' },
-          },
-          {
-            in: 'query',
-            name: 'rating',
-            required: false,
-            schema: { type: 'integer', minimum: 1, maximum: 5 },
-            description: 'Filter by exact star rating (1–5)',
-          },
+          { in: 'path', name: 'id', required: true, schema: { type: 'string' } },
+          { in: 'query', name: 'scope', required: false, schema: { type: 'string', enum: ['all', 'org', 'product'] } },
+          { in: 'query', name: 'externalProductId', required: false, description: 'Only valid when scope=product.', schema: { type: 'string' } },
+          { in: 'query', name: 'status', required: false, schema: { type: 'string', enum: ['published', 'pending', 'rejected'] } },
+          { in: 'query', name: 'page', required: false, schema: { type: 'integer' } },
+          { in: 'query', name: 'limit', required: false, schema: { type: 'integer' } },
+          { in: 'query', name: 'rating', required: false, schema: { type: 'integer', minimum: 1, maximum: 5 }, description: 'Filter by exact star rating (1–5)' },
         ],
         responses: {
-          '200': { description: 'Reviews fetched successfully' },
-          '400': { description: 'Invalid parameters' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
+          '200': {
+            description: 'Reviews fetched successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: {
+                        reviews: { type: 'array', items: { $ref: '#/components/schemas/Review' } },
+                        pagination: { $ref: '#/components/schemas/Pagination' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid parameters', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '403': { description: 'Forbidden', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
@@ -356,26 +584,12 @@ export const openApiSpec = {
                 schema: {
                   type: 'object',
                   properties: {
-                    review: {
+                    data: {
                       type: 'object',
                       properties: {
-                        _id: { type: 'string' },
-                        externalProductId: { type: 'string' },
-                        productName: { type: 'string' },
-                        organizationId: { type: 'string' },
-                        rating: { type: 'integer' },
-                        text: { type: 'string' },
-                        reviewerName: { type: 'string' },
-                        reviewerEmail: { type: 'string' },
-                        status: {
-                          type: 'string',
-                          enum: ['published', 'pending', 'rejected'],
-                        },
-                        createdAt: { type: 'string' },
-                        updatedAt: { type: 'string' },
+                        review: { $ref: '#/components/schemas/Review' },
                       },
                     },
-                    message: { type: 'string' },
                   },
                 },
               },
@@ -805,26 +1019,46 @@ export const openApiSpec = {
     '/organization/{id}/reviews/{reviewId}/status': {
       patch: {
         summary: 'Update review status (JWT required)',
+        security: [{ bearerAuth: [] }],
         parameters: [
-          {
-            in: 'path',
-            name: 'id',
-            required: true,
-            schema: { type: 'string' },
-          },
-          {
-            in: 'path',
-            name: 'reviewId',
-            required: true,
-            schema: { type: 'string' },
-          },
+          { in: 'path', name: 'id', required: true, schema: { type: 'string' } },
+          { in: 'path', name: 'reviewId', required: true, schema: { type: 'string' } },
         ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: {
+                  status: { type: 'string', enum: ['published', 'pending', 'rejected'] },
+                },
+              },
+            },
+          },
+        },
         responses: {
-          '200': { description: 'Review status updated successfully' },
-          '400': { description: 'Invalid request body' },
-          '401': { description: 'Unauthorized' },
-          '403': { description: 'Forbidden' },
-          '404': { description: 'Review not found' },
+          '200': {
+            description: 'Review status updated successfully',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    data: {
+                      type: 'object',
+                      properties: { review: { $ref: '#/components/schemas/Review' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          '400': { description: 'Invalid request body', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '401': { description: 'Unauthorized', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '403': { description: 'Forbidden', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+          '404': { description: 'Review not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
         },
       },
     },
